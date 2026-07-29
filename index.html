@@ -120,10 +120,6 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
 #bome input:focus,#bome select:focus,#bome textarea:focus{outline:none;border-color:var(--tim)}
 .ghi{font-size:.82rem;color:var(--than-mo);max-width:min(480px,100%);font-weight:500;line-height:1.6}
 /* chỉnh giọng */
-.chon2{display:flex;gap:8px;width:min(480px,100%)}
-.chon2 button{flex:1;background:#fff;border:3px solid rgba(201,182,245,.6);border-radius:16px;
-  padding:12px 8px;font-family:var(--dm);font-weight:700;font-size:.88rem;color:var(--than-mo);cursor:pointer}
-.chon2 button.chon{border-color:var(--hong-dam);color:var(--hong-dam);background:#FFF5F9}
 .truot{width:min(480px,100%);display:flex;align-items:center;gap:12px}
 .truot input[type=range]{flex:1;-webkit-appearance:none;height:8px;border-radius:99px;
   background:linear-gradient(90deg,var(--bac-ha),var(--hong));padding:0;border:none}
@@ -273,23 +269,17 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
     <option value="120">2 tiếng</option><option value="240">4 tiếng</option></select>
 
   <h3>Giọng nói của Mimi</h3>
-  <div class="chon2" id="cheDo">
-    <button data-cd="may">Giọng máy<br><span style="font-weight:500;font-size:.72rem">miễn phí, tức thì</span></button>
-    <button data-cd="gemini">Giọng Gemini<br><span style="font-weight:500;font-size:.72rem">đáng yêu hơn, chậm hơn</span></button>
-  </div>
+  <p class="ghi">Mimi dùng <b>Google Cloud Text-to-Speech</b> làm giọng chính. Vào
+    <a href="https://console.cloud.google.com/apis/library/texttospeech.googleapis.com" target="_blank" rel="noopener">Google Cloud Console</a>
+    và bật API này cho cùng project với mã API Gemini phía trên. Nếu chưa bật hoặc lỗi mạng, Mimi
+    tự chuyển sang giọng dự phòng của máy.</p>
 
-  <div id="khoiMay">
-    <label for="giongMay" style="margin-top:10px">Chọn giọng có sẵn trên máy</label>
-    <select id="giongMay"></select>
-    <p class="ghi" id="chanDoan" style="margin-top:6px"></p>
-    <label style="margin-top:10px">Cao độ — kéo phải cho giọng trẻ con</label>
-    <div class="truot"><input type="range" id="cao" min="0.6" max="2" step="0.05"><span id="caoSo">1.9</span></div>
-    <label>Tốc độ — chậm lại cho bé dễ nghe</label>
-    <div class="truot"><input type="range" id="toc" min="0.5" max="1.3" step="0.02"><span id="tocSo">0.88</span></div>
-  </div>
+  <label for="toc">Tốc độ nói — chậm lại cho bé dễ nghe</label>
+  <div class="truot"><input type="range" id="toc" min="0.5" max="1.3" step="0.02"><span id="tocSo">0.88</span></div>
 
-  <div id="khoiGemini" style="display:none;width:min(480px,100%)">
-    <label for="giongGem" style="margin-top:10px">Chọn nhân vật giọng</label>
+  <h3>Giọng Gemini cho khoảnh khắc đặc biệt</h3>
+  <div id="khoiGemini" style="width:min(480px,100%)">
+    <label for="giongGem">Chọn nhân vật giọng</label>
     <select id="giongGem">
       <option value="Leda">Leda — trẻ trung, trong trẻo ⭐</option>
       <option value="Achernar">Achernar — mềm, nhẹ nhàng</option>
@@ -302,9 +292,9 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
     <select id="dungGem">
       <option value="diem">Chỉ khoảnh khắc đáng nhớ — lời chào và lúc kể chuyện ⭐</option>
       <option value="luon">Mọi lượt nói — hết hạn mức rất nhanh</option>
-      <option value="tat">Tắt hẳn, chỉ dùng giọng máy</option>
+      <option value="tat">Tắt hẳn, chỉ dùng Cloud TTS / giọng máy</option>
     </select>
-    <p class="ghi" style="margin-top:8px">Giọng do AI tạo, nghe như bé thật và đọc chuẩn cả tiếng Việt lẫn tiếng Anh. Đổi lại: hạn mức miễn phí chỉ <b>10 lượt mỗi ngày</b> và mỗi câu mất khoảng 7 giây. Hết hạn mức, Mimi tự quay về giọng máy.</p>
+    <p class="ghi" style="margin-top:8px">Giọng do AI tạo, nghe như bé thật. Hạn mức miễn phí chỉ <b>10 lượt mỗi ngày</b> và mỗi câu mất khoảng 7 giây. Hết hạn mức, Mimi tự quay về Cloud TTS hoặc giọng máy.</p>
   </div>
 
   <div class="hangnut" style="margin-top:10px">
