@@ -393,9 +393,9 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
     camera.position.set(tam.x, tam.y + boxSize.y * 0.05, tam.z + khoangCach);
     camera.lookAt(tam);
 
-    chinhKichThuoc();
     canvas.style.display = 'block';
     svg.style.display = 'none';
+    chinhKichThuoc();
     M.ready = true;
     window.dispatchEvent(new CustomEvent('mimi3d-model-loaded', { detail:{ model, box: boxSize, B } }));
   }, undefined, (err)=>{
