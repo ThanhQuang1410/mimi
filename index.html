@@ -1145,45 +1145,7 @@ function veTep(){
 function luuTepDangXem(){
   if(tepDangXem && $("#noiDung").value !== (FS.doc(tepDangXem)||"")) FS.ghi(tepDangXem, $("#noiDung").value);
 }
-/* ---- bảng chỉnh giọng ---- */
-function veDanhSachGiong(){
-  const ds = (tongHop ? tongHop.getVoices() : [])
-    .filter(v=>/^(vi|en)/i.test(v.lang))
-    .sort((a,b)=> ((/^vi/i.test(b.lang)?1:0)-(/^vi/i.test(a.lang)?1:0)) || (xepHang(a)-xepHang(b)));
-  const nhan = { nu:"♀", nam:"♂", "?":"·" };
-  const sel = $("#giongMay");
-  sel.innerHTML = '<option value="">Tự động chọn giọng nữ</option>' +
-    ds.map(v=>`<option value="${thoat(v.name)}">${nhan[gioiTinh(v)]} ${thoat(v.name)} · ${thoat(v.lang)}</option>`).join("");
-  sel.value = CAI.giongMay || "";
-
-  const viNu = ds.filter(v=>/^vi/i.test(v.lang) && gioiTinh(v)==="nu");
-  const viTat = ds.filter(v=>/^vi/i.test(v.lang));
-  const d = $("#chanDoan");
-  if(loiTTS && CAI.cheDo === "gemini"){
-    d.innerHTML = `⚠️ <b>Giọng Gemini đang lỗi</b> nên Mimi phải dùng tạm giọng máy:<br>`+
-                  `<code style="font-size:.76rem">${thoat(loiTTS)}</code>`;
-  }else if(!viTat.length){
-    d.innerHTML = "⚠️ Máy này <b>không có giọng tiếng Việt nào</b>. Trình duyệt sẽ đọc tiếng Việt bằng "+
-                  "giọng mặc định — thường là giọng nam tiếng Anh, nghe rất thô. Hãy dùng <b>Giọng Gemini</b>.";
-  }else if(!viNu.length){
-    d.innerHTML = `⚠️ Máy chỉ có giọng tiếng Việt <b>${thoat(viTat.map(v=>v.name).join(", "))}</b>, `+
-                  `không giọng nào là giọng nữ. Hãy chuyển sang <b>Giọng Gemini</b>.`;
-  }else{
-    d.innerHTML = `Đang đọc bằng: <b>${thoat(giongVi ? giongVi.name : "—")}</b> (tiếng Việt) và `+
-                  `<b>${thoat(giongEn ? giongEn.name : "—")}</b> (tiếng Anh).`;
-  }
-}
-function veCheDo(){
-  document.querySelectorAll("#cheDo button").forEach(b=>
-    b.classList.toggle("chon", b.dataset.cd === CAI.cheDo));
-  $("#khoiMay").style.display    = CAI.cheDo === "may" ? "" : "none";
-  $("#khoiGemini").style.display = CAI.cheDo === "gemini" ? "" : "none";
-}
-document.querySelectorAll("#cheDo button").forEach(b=>
-  b.addEventListener("click", ()=>{ CAI.cheDo = b.dataset.cd; veCheDo(); }));
-$("#cao").addEventListener("input", e=>{ CAI.cao = +e.target.value; $("#caoSo").textContent = CAI.cao.toFixed(2); });
 $("#toc").addEventListener("input", e=>{ CAI.toc = +e.target.value; $("#tocSo").textContent = CAI.toc.toFixed(2); });
-$("#giongMay").addEventListener("change", e=>{ CAI.giongMay = e.target.value; chonGiong(); veDanhSachGiong(); });
 $("#giongGem").addEventListener("change", e=>{ CAI.giongGem = e.target.value; $("#ngheThu").click(); });
 $("#ngheThu").addEventListener("click", ()=>{
   imNgay(); amThanh();
@@ -1219,11 +1181,10 @@ function moBoMe(nhac){
   $("#key").value = CAI.key; $("#proxy").value = CAI.proxy;
   $("#ten").value = CAI.ten; $("#tuoi").value = CAI.tuoi;
   $("#phut").value = CAI.phut; $("#nghi").value = CAI.nghi;
-  $("#cao").value = CAI.cao; $("#caoSo").textContent = (+CAI.cao).toFixed(2);
   $("#toc").value = CAI.toc; $("#tocSo").textContent = (+CAI.toc).toFixed(2);
   $("#giongGem").value = CAI.giongGem || "Leda";
   $("#dungGem").value = CAI.dungGem || "diem";
-  veDanhSachGiong(); veCheDo(); veQuota(); veTep();
+  veQuota(); veTep();
   $("#bome").classList.remove("an");
 }
 $("#rang").addEventListener("click", ()=>{ if(congBoMe()) moBoMe(); });
@@ -1247,9 +1208,8 @@ $("#luu").addEventListener("click", ()=>{
   const tenCu = CAI.ten;
   CAI = { ...CAI, key:k, proxy:p, ten:$("#ten").value.trim(), tuoi:+$("#tuoi").value,
           phut:+$("#phut").value, nghi:+$("#nghi").value,
-          giongMay:$("#giongMay").value, cao:+$("#cao").value,
           toc:+$("#toc").value, giongGem:$("#giongGem").value, dungGem:$("#dungGem").value };
-  luuCai(); chonGiong();
+  luuCai();
   if(CAI.ten && CAI.ten !== tenCu)
     FS.them("/nho/ho_so.md", `- Tên: ${CAI.ten}, ${CAI.tuoi} tuổi`);
   lichSu = [];
