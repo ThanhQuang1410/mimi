@@ -368,41 +368,42 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
   }
   window.addEventListener('resize', chinhKichThuoc);
 
-  let model = null, xong = false, boxSize = new THREE.Vector3(1,1,1);
+  let model = null, boxSize = new THREE.Vector3(1,1,1);
   const B = {};  // bone tra cứu theo tên ngắn, điền sau khi model load xong
 
-  const hetGio = setTimeout(()=>{ xong = true; }, 4000);  // quá 4s coi như thất bại, giữ SVG mãi mãi
-
+  // Thỏ SVG đã hiển thị sẵn mặc định — không cần huỷ-khi-quá-giờ, model tải xong
+  // lúc nào (nhanh hay chậm) thì hiện lúc đó. Chỉ thật sự ở lại thỏ SVG khi lỗi tải.
   const loader = new THREE.GLTFLoader();
   loader.load('./skye_paw_patrol_rig.glb', (gltf)=>{
-    if(xong) return;  // đã hết giờ trước khi tải xong
-    xong = true; clearTimeout(hetGio);
-    model = gltf.scene;
-    scene.add(model);
+    try{
+      model = gltf.scene;
+      scene.add(model);
 
-    // ẩn cặp kính đeo trên mặt, giữ cặp kính/mũ bay trên đầu
-    model.traverse(o=>{
-      if(/Goggles_Face|GogglesStrap_Face/i.test(o.name)) o.visible = false;
-    });
+      // ẩn cặp kính đeo trên mặt, giữ cặp kính/mũ bay trên đầu
+      model.traverse(o=>{
+        if(/Goggles_Face|GogglesStrap_Face/i.test(o.name)) o.visible = false;
+      });
 
-    model.updateMatrixWorld(true);  // bắt buộc trước khi đo bounding box, nếu không matrixWorld còn ở identity
-    const box = new THREE.Box3().setFromObject(model);
-    boxSize = box.getSize(new THREE.Vector3());
-    const tam = box.getCenter(new THREE.Vector3());
-    const banKinh = Math.max(boxSize.x, boxSize.y, boxSize.z, 0.001) * 0.6;
-    const khoangCach = Math.max(banKinh / Math.sin((camera.fov * Math.PI / 180) / 2), 0.5);
-    camera.position.set(tam.x, tam.y + boxSize.y * 0.05, tam.z + khoangCach);
-    camera.lookAt(tam);
-    console.log('Skye 3D: model loaded. boxSize=', boxSize, 'center=', tam, 'cameraPos=', camera.position);
+      model.updateMatrixWorld(true);  // bắt buộc trước khi đo bounding box, nếu không matrixWorld còn ở identity
+      const box = new THREE.Box3().setFromObject(model);
+      boxSize = box.getSize(new THREE.Vector3());
+      const tam = box.getCenter(new THREE.Vector3());
+      const banKinh = Math.max(boxSize.x, boxSize.y, boxSize.z, 0.001) * 0.6;
+      const khoangCach = Math.max(banKinh / Math.sin((camera.fov * Math.PI / 180) / 2), 0.5);
+      camera.position.set(tam.x, tam.y + boxSize.y * 0.05, tam.z + khoangCach);
+      camera.lookAt(tam);
+      console.log('Skye 3D: model loaded OK. boxSize=', boxSize.toArray(), 'center=', tam.toArray(), 'cameraPos=', camera.position.toArray());
 
-    canvas.style.display = 'block';
-    svg.style.display = 'none';
-    chinhKichThuoc();
-    M.ready = true;
-    window.dispatchEvent(new CustomEvent('mimi3d-model-loaded', { detail:{ model, box: boxSize, B } }));
+      canvas.style.display = 'block';
+      svg.style.display = 'none';
+      chinhKichThuoc();
+      M.ready = true;
+      window.dispatchEvent(new CustomEvent('mimi3d-model-loaded', { detail:{ model, box: boxSize, B } }));
+    }catch(e){
+      console.error('Skye 3D: lỗi khi dựng scene sau khi tải xong, giữ thỏ SVG:', e);
+    }
   }, undefined, (err)=>{
-    console.warn('Skye 3D lỗi tải, giữ thỏ SVG:', err);
-    xong = true;
+    console.error('Skye 3D: lỗi tải file .glb, giữ thỏ SVG:', err);
   });
 
   M._scene = scene; M._camera = camera; M._renderer = renderer;
