@@ -390,15 +390,12 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
       });
 
       model.updateMatrixWorld(true);  // bắt buộc trước khi đo bounding box, nếu không matrixWorld còn ở identity
-      // Đo theo vị trí thế giới thực của các bone, không dùng Box3.setFromObject(model): với mesh
-      // có skin, hình học thô (chưa qua biến dạng theo xương) có thể lớn hơn RẤT nhiều so với
-      // kích thước hiển thị thật lúc render (đây là nguyên nhân Skye bị bé tí xíu).
-      const box = new THREE.Box3();
-      let demBone = 0;
-      model.traverse(o=>{
-        if(o.isBone){ box.expandByPoint(o.getWorldPosition(new THREE.Vector3())); demBone++; }
-      });
-      if(demBone === 0) box.setFromObject(model);  // dự phòng nếu model không có bone
+      // Đo theo hình học mesh thật (Box3.setFromObject) — đã đối chiếu bằng cách tự tính tay từ
+      // dữ liệu gốc trong file .glb (duyệt cây node + đọc toàn bộ đỉnh mesh), khớp chính xác với
+      // số liệu ở đây. ĐỪNG đo theo vị trí bone: bone của model này ở một hệ tỉ lệ nhỏ hơn mesh
+      // khoảng 25 lần (rig dựng ở scale khác, bù lại bằng bind-matrix lúc skin), dùng bone sẽ làm
+      // camera đứng quá gần và cắt mất đầu.
+      const box = new THREE.Box3().setFromObject(model);
       boxSize = box.getSize(new THREE.Vector3());
       const tam = box.getCenter(new THREE.Vector3());
       // Bán kính hình cầu bao trọn khối (nửa đường chéo) — dùng max(x,y,z) đơn thuần đánh giá
@@ -413,11 +410,11 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
       camera.near = Math.max(khoangCach * 0.01, 0.01);
       camera.far = khoangCach * 3;
       camera.updateProjectionMatrix();
-      console.log('Skye 3D: model loaded OK. demBone=', demBone, 'boxSize=', boxSize.toArray(), 'banKinh=', banKinh, 'center=', tam.toArray(), 'cameraPos=', camera.position.toArray(), 'near/far=', camera.near, camera.far);
 
       canvas.style.display = 'block';
       svg.style.display = 'none';
-      chinhKichThuoc();
+      chinhKichThuoc();  // đo lại kích thước canvas thật + cập nhật camera.aspect SAU khi đã hiện canvas
+      console.log('Skye 3D: model loaded OK. boxSize=', boxSize.toArray(), 'banKinh=', banKinh, 'center=', tam.toArray(), 'cameraPos=', camera.position.toArray(), 'near/far=', camera.near, camera.far, 'canvas clientW/H=', canvas.clientWidth, canvas.clientHeight, 'renderer size=', renderer.getSize(new THREE.Vector2()).toArray(), 'camera.fov/aspect=', camera.fov, camera.aspect);
       M.ready = true;
       window.dispatchEvent(new CustomEvent('mimi3d-model-loaded', { detail:{ model, box: boxSize, B } }));
     }catch(e){
