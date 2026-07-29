@@ -345,6 +345,7 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
 
 <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script>
 (function(){
   "use strict";
@@ -364,6 +365,17 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
   const denHuong = new THREE.DirectionalLight(0xffffff, 0.8);
   denHuong.position.set(2, 4, 3);
   scene.add(denHuong);
+
+  // Huy hiệu cổ / khoá vòng cổ dùng material KHÔNG khai báo metallicFactor, mà chuẩn glTF mặc
+  // định là 1.0 = kim loại hoàn toàn. Kim loại không có màu khuếch tán, chỉ phản chiếu môi
+  // trường — không có environment map thì nó phản chiếu ra màu ĐEN (đó là lý do huy hiệu bị tối).
+  // Dựng một môi trường phòng đơn giản để kim loại có thứ mà phản chiếu.
+  try{
+    if(THREE.RoomEnvironment && THREE.PMREMGenerator){
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+    }
+  }catch(e){ console.warn('Skye 3D: không dựng được environment map:', e); }
 
   function chinhKichThuoc(){
     const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1;
@@ -393,10 +405,29 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
         if(o.isSkinnedMesh && o.skeleton) o.bind(o.skeleton, o.matrixWorld);
       });
 
-      // ẩn cặp kính đeo trên mặt, giữ cặp kính/mũ bay trên đầu
+      // Ẩn cặp kính đeo trên MẶT, giữ cặp kính + mũ bay trên đầu.
+      // Lưu ý: node mang tên mô tả ("Skye_Goggles_Face_...") là node RỖNG, không chứa mesh — lọc
+      // theo tên đó thì ẩn nhầm node rỗng, kính vẫn hiện. Mesh thật nằm ở node "Object_NN" đứng
+      // ngay sau node mô tả trong file (đã đối chiếu material để chắc chắn):
+      //   Object_55 = Goggles_Face, Object_57 = Goggles_Face_Glass, Object_63 = GogglesStrap_Face
+      //   (giữ lại Object_59/61/65 = Goggles_Top, Goggles_Top_Glass, GogglesStrap_Top)
+      const KINH_MAT = ['Object_55','Object_57','Object_63'];
+      let daAn = 0;
       model.traverse(o=>{
-        if(/Goggles_Face|GogglesStrap_Face/i.test(o.name)) o.visible = false;
+        if(KINH_MAT.indexOf(o.name) !== -1){ o.visible = false; daAn++; }
       });
+      if(daAn !== KINH_MAT.length)
+        console.warn('Skye 3D: chỉ ẩn được', daAn, '/', KINH_MAT.length, 'mesh kính đeo mặt — tên node có thể đã đổi.');
+
+      // Nếu không dựng được environment map, kim loại sẽ đen thui — hạ metalness để còn nhìn được.
+      if(!scene.environment){
+        model.traverse(o=>{
+          if(!o.isMesh) return;
+          (Array.isArray(o.material) ? o.material : [o.material]).forEach(m=>{
+            if(m && m.metalness > 0.5) m.metalness = 0.15;
+          });
+        });
+      }
 
       // File này dựng theo trục Z HƯỚNG LÊN (đã đối chiếu toạ độ từng bộ phận đọc thẳng từ .glb:
       // thân z≈0–172, đầu z≈158–382) và mặt quay về -Y, trong khi Three.js mặc định Y hướng lên.
