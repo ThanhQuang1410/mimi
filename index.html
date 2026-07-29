@@ -383,6 +383,16 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
     try{
       model = gltf.scene;
 
+      // GLTFLoader gọi mesh.bind(skeleton, mesh.matrixWorld) TRƯỚC khi matrixWorld được tính,
+      // nên bindMatrix bị kẹt ở ma trận đơn vị thay vì ma trận thật (armature có scale 27.92).
+      // Hậu quả: Box3 đo ra 383 đơn vị nhưng shader lại vẽ ở 13.7 đơn vị (nhỏ hơn đúng 27.92 lần),
+      // làm mọi phép căn camera dựa trên Box3 đều sai tỉ lệ. Bind lại bằng matrixWorld đã tính
+      // đúng, ngay khi model còn chưa bị xoay/bọc — sau bước này số đo và hình vẽ mới khớp nhau.
+      model.updateMatrixWorld(true);
+      model.traverse(o=>{
+        if(o.isSkinnedMesh && o.skeleton) o.bind(o.skeleton, o.matrixWorld);
+      });
+
       // ẩn cặp kính đeo trên mặt, giữ cặp kính/mũ bay trên đầu
       model.traverse(o=>{
         if(/Goggles_Face|GogglesStrap_Face/i.test(o.name)) o.visible = false;
