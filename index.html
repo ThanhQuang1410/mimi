@@ -398,10 +398,12 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
       const box = new THREE.Box3().setFromObject(model);
       boxSize = box.getSize(new THREE.Vector3());
       const tam = box.getCenter(new THREE.Vector3());
-      // Bán kính hình cầu bao trọn khối (nửa đường chéo) — dùng max(x,y,z) đơn thuần đánh giá
-      // thấp với khối không vuông (cao hơn rộng), làm camera đứng quá gần và cắt mất phần đầu.
-      const banKinh = Math.max(boxSize.length() / 2, 0.001) * 1.15;
-      const khoangCach = Math.max(banKinh / Math.sin((camera.fov * Math.PI / 180) / 2), 0.5);
+      // Camera nhìn thẳng dọc trục Z, nên chỉ chiều rộng (X) và chiều cao (Y) quyết định khoảng
+      // cách cần lùi — chiều sâu (Z, hướng ống kính) không cần "chỗ" trong góc nhìn, chỉ cần nằm
+      // giữa near/far. Dùng bán kính hình cầu bao cả 3 chiều (kể cả Z) làm camera lùi xa hơn
+      // nhiều so với mức cần thiết, khiến Skye bé tí dù không còn bị cắt.
+      const nuaCao = Math.max(boxSize.x, boxSize.y) / 2 * 1.15;
+      const khoangCach = Math.max(nuaCao / Math.tan((camera.fov * Math.PI / 180) / 2), 0.5);
       camera.position.set(tam.x, tam.y + boxSize.y * 0.05, tam.z + khoangCach);
       camera.lookAt(tam);
       // near/far cố định (0.1–100) giả định model tính theo mét — model này dùng đơn vị lớn hơn
@@ -414,7 +416,7 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
       canvas.style.display = 'block';
       svg.style.display = 'none';
       chinhKichThuoc();  // đo lại kích thước canvas thật + cập nhật camera.aspect SAU khi đã hiện canvas
-      console.log('Skye 3D: model loaded OK. boxSize=', boxSize.toArray(), 'banKinh=', banKinh, 'center=', tam.toArray(), 'cameraPos=', camera.position.toArray(), 'near/far=', camera.near, camera.far, 'canvas clientW/H=', canvas.clientWidth, canvas.clientHeight, 'renderer size=', renderer.getSize(new THREE.Vector2()).toArray(), 'camera.fov/aspect=', camera.fov, camera.aspect);
+      console.log('Skye 3D: model loaded OK. boxSize=', boxSize.toArray(), 'nuaCao=', nuaCao, 'khoangCach=', khoangCach, 'center=', tam.toArray(), 'cameraPos=', camera.position.toArray(), 'near/far=', camera.near, camera.far, 'canvas clientW/H=', canvas.clientWidth, canvas.clientHeight, 'renderer size=', renderer.getSize(new THREE.Vector2()).toArray(), 'camera.fov/aspect=', camera.fov, camera.aspect);
       M.ready = true;
       window.dispatchEvent(new CustomEvent('mimi3d-model-loaded', { detail:{ model, box: boxSize, B } }));
     }catch(e){
