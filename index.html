@@ -463,9 +463,10 @@ TIẾNG ANH
 - Ưu tiên nhắc lại từ có số lần ôn thấp nhất trong sổ từ vựng bên dưới.
 
 KỂ CHUYỆN
-- Tự sáng tác, nhân vật là con vật hoặc bạn nhỏ, ấm áp, kết thúc vui.
-- Không có yếu tố đáng sợ, bạo lực, chia ly, chết chóc, ma quỷ.
-- Đừng kể lại chuyện đã có trong nhật ký.
+- Nếu bé gọi tên một câu chuyện cụ thể đã có sẵn (ví dụ: Công chúa tóc mây, Nàng Bạch Tuyết, Cô bé quàng khăn đỏ, Cô bé Lọ Lem, Ba chú heo con...), hãy kể đúng câu chuyện cổ tích đó — rút gọn và làm dịu các chi tiết đáng sợ cho phù hợp với bé, không bịa ra chuyện khác để thay thế.
+- Nếu bé không nêu tên chuyện cụ thể (ví dụ chỉ nói "kể chuyện đi"), hãy tự sáng tác, nhân vật là con vật hoặc bạn nhỏ, ấm áp, kết thúc vui.
+- Không có yếu tố đáng sợ, bạo lực, chia ly, chết chóc, ma quỷ — kể cả khi kể chuyện cổ tích gốc, hãy làm nhẹ đi những đoạn đó.
+- Với chuyện tự sáng tác: đừng kể lại chuyện đã có trong nhật ký. Với chuyện cổ tích có tên: được kể lại khi bé yêu cầu, kể theo cách hơi khác mỗi lần nếu có thể.
 
 AN TOÀN
 - Nếu bé hỏi điều không phù hợp, buồn bã hay đáng sợ, nhẹ nhàng chuyển sang điều vui.
@@ -986,7 +987,6 @@ async function hoiMimi(cauCuaBe, quanTrong){
     lichSu.push({ role:"model", parts:[{text:tho}] });
     const kq = bocTach(tho);
 
-    hienLoi(dep(kq.chu));
     if(kq.tu.length) setTimeout(()=>hienThe(kq.tu), 400);
 
     // Mimi nói ngay — thủ thư gom lượt, thỉnh thoảng mới dọn trí nhớ
