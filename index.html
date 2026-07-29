@@ -669,6 +669,7 @@ const body = document.body, bong = $("#bong"), micChu = $("#micChu");
 let lichSu = [], dangChay = false, trangThai = "ngu", choPhepNghe = false;
 
 function datTrangThai(t){
+  if(window.Mimi3D && window.Mimi3D.ready) window.Mimi3D.setTrangThai(t);
   trangThai = t;
   body.classList.remove("nghe","nghi","noi");
   if(t !== "ngu") body.classList.add(t);
@@ -859,6 +860,7 @@ const tongHop = window.speechSynthesis;
 const miengO = $("#miengO"), luoi = $("#luoi");
 let nhipMieng = null;
 function moMieng(){
+  if(window.Mimi3D && window.Mimi3D.ready){ window.Mimi3D.moMieng(); return; }
   if(nhipMieng) return;
   nhipMieng = setInterval(()=>{
     const r = 2+Math.random()*7;
@@ -867,12 +869,14 @@ function moMieng(){
   },105);
 }
 function khepMieng(){
+  if(window.Mimi3D && window.Mimi3D.ready){ window.Mimi3D.khepMieng(); return; }
   clearInterval(nhipMieng); nhipMieng=null;
   miengO.setAttribute("ry",3); miengO.setAttribute("rx",15);
   luoi.setAttribute("cy",200); luoi.setAttribute("ry",2);
 }
 let hetVoTay = null;
 function voTay(){
+  if(window.Mimi3D && window.Mimi3D.ready){ window.Mimi3D.nhay(); return; }
   if(hetVoTay) clearTimeout(hetVoTay);
   body.classList.add("votay");
   hetVoTay = setTimeout(()=>{ body.classList.remove("votay"); hetVoTay=null; }, 1500);
