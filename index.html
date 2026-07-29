@@ -444,8 +444,9 @@ function demDung(loai){ kiemNgay(); DUNG[loai]++; KHO.ghi("mimi_dung", DUNG); }
 function conQuota(loai){ kiemNgay(); return DUNG[loai] < TRAN[loai]; }
 
 let CAI = KHO.doc("mimi_cai", { key:"", proxy:"", ten:"", tuoi:4, phut:30, nghi:60,
-                                cheDo:"may", giongMay:"", cao:1.9, toc:.88, giongGem:"Leda", dungGem:"diem" });
-if(CAI.cheDo === undefined){ CAI.cheDo="may"; CAI.giongMay=""; CAI.cao=1.9; CAI.toc=.88; CAI.giongGem="Leda"; }
+                                toc:.88, giongGem:"Leda", dungGem:"diem" });
+if(CAI.toc === undefined) CAI.toc = .88;
+if(CAI.giongGem === undefined) CAI.giongGem = "Leda";
 if(CAI.dungGem === undefined) CAI.dungGem = "diem";
 const ten = () => CAI.ten || "con";
 function luuCai(){ KHO.ghi("mimi_cai", CAI); }
@@ -704,35 +705,6 @@ function tachDoan(s){
    7. MIMI NÓI
    ============================================================ */
 const tongHop = window.speechSynthesis;
-let giongVi = null, giongEn = null;
-/* Nhận diện giới tính giọng theo tên. Danh sách giọng nam phổ biến trên các hệ máy —
-   "Microsoft An" và "NamMinh" (tiếng Việt), Alex/Daniel/Fred… (tiếng Anh). */
-const GIONG_NAM = /\b(an|nam\s*minh|namminh|minh|bao|b[aá]o|h[uù]ng|tu[aâ]n|alex|aaron|daniel|fred|thomas|david|mark|george|james|arthur|rishi|ravi|reed|rocko|eddy|gordon|oliver|liam|nathan|junior|male|nam)\b/i;
-const GIONG_NU  = /\b(linh|hoai\s*my|hoaimy|mai|lan|ng[oọ]c|th[uủ]y|female|n[uữ]|samantha|karen|moira|tessa|zira|fiona|victoria|ava|allison|susan|zoe|nicky|kate|serena|martha)\b/i;
-
-function gioiTinh(v){
-  if(GIONG_NU.test(v.name)) return "nu";
-  if(GIONG_NAM.test(v.name)) return "nam";
-  return "?";
-}
-/* Xếp hạng: nữ rõ ràng > chưa rõ > nam. Không bao giờ chọn giọng nam nếu còn lựa chọn khác. */
-function xepHang(v){ const g = gioiTinh(v); return g==="nu" ? 0 : g==="?" ? 1 : 2; }
-
-function chonGiong(){
-  if(!tongHop) return;
-  const ds = tongHop.getVoices();
-  const daChon = CAI.giongMay ? ds.find(v=>v.name === CAI.giongMay) : null;
-  const vi = ds.filter(v=>/^vi/i.test(v.lang)).sort((a,b)=>xepHang(a)-xepHang(b));
-  const en = ds.filter(v=>/^en/i.test(v.lang))
-               .sort((a,b)=> (xepHang(a)-xepHang(b)) || ((/en[-_](US|GB)/i.test(b.lang)?1:0)-(/en[-_](US|GB)/i.test(a.lang)?1:0)));
-  giongVi = daChon || vi[0] || null;
-  giongEn = en[0] || null;
-}
-chonGiong();
-if(tongHop) tongHop.onvoiceschanged = ()=>{
-  chonGiong();
-  if(!$("#bome").classList.contains("an")) veDanhSachGiong();
-};
 
 const miengO = $("#miengO"), luoi = $("#luoi");
 let nhipMieng = null;
@@ -756,6 +728,7 @@ function chiaCau(t){
 }
 let dungNoi = false;
 
+const CAO_MAY = 1.15;   // giọng máy giờ chỉ còn là lưới an toàn cuối, không cho bố mẹ chỉnh nữa
 function noiMay(cau, xongThi){
   const doan = [];
   tachDoan(String(cau||"")).forEach(d=>{
@@ -773,12 +746,12 @@ function noiMay(cau, xongThi){
     const rung  = (Math.random()-.5)*.16;
     const reo   = /!/.test(t) ? .14 : /\?/.test(t) ? .07 : 0;
     if(d.en){
-      u.lang = "en-US"; if(giongEn) u.voice = giongEn;
-      u.pitch = Math.min(2, CAI.cao + reo);
+      u.lang = "en-US";
+      u.pitch = Math.min(2, CAO_MAY + reo);
       u.rate  = Math.max(.4, CAI.toc * .82);      // từ tiếng Anh đọc chậm hơn để bé bắt chước
     } else {
-      u.lang = "vi-VN"; if(giongVi) u.voice = giongVi;
-      u.pitch = Math.min(2, Math.max(.3, CAI.cao + rung + reo));
+      u.lang = "vi-VN";
+      u.pitch = Math.min(2, Math.max(.3, CAO_MAY + rung + reo));
       u.rate  = Math.max(.4, CAI.toc * (/!/.test(t) ? 1.06 : 1));
     }
     u.onend = tiep; u.onerror = tiep;
@@ -1113,7 +1086,7 @@ $("#batDau").addEventListener("click", ()=>{
   if(dangKhoa()){ moManNgu(); return; }
   $("#phuBatDau").classList.add("an");
   dangChay = true; choPhepNghe = true;
-  amThanh(); chonGiong();
+  amThanh();
   try{ const u = new SpeechSynthesisUtterance(" "); u.volume=0; tongHop.speak(u); }catch(e){}
   batDauPhien();
   if(!sanSang()){ moBoMe("Bố mẹ nhập mã API miễn phí để Mimi biết nói nhé."); return; }
