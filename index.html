@@ -506,7 +506,7 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
     else console.log('Skye 3D: đã tìm đủ', Object.keys(B).length, 'xương để cử động.');
   }
 
-  let trangThaiHienTai = 'ngu', hamMo = false, nhayT0 = null, hamHienTai = 0;
+  let trangThaiHienTai = 'ngu', hamMo = false, nhayT0 = null, hamHienTai = 0, lacTre = 0;
   M.setTrangThai = function(t){ trangThaiHienTai = t; };
   M.moMieng = function(){ hamMo = true; };
   M.khepMieng = function(){ hamMo = false; };
@@ -531,19 +531,22 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
         o.rotation.y = o.userData.goc.y + Math.sin(t*tocDuoi - i*0.6) * bienDoDuoi;
       });
 
-      // tai: vẫy khi nghe, vẫy mạnh và nhanh hơn hẳn khi mừng
-      const bienTai = dangMung ? 0.5 : (dangNghe ? 0.3 : 0);
-      const tocTai  = dangMung ? 12 : 6;
-      if(B.taiT) B.taiT.rotation.z = B.taiT.userData.goc.z + (bienTai ? Math.sin(t*tocTai) * bienTai : 0);
-      if(B.taiP) B.taiP.rotation.z = B.taiP.userData.goc.z + (bienTai ? Math.sin(t*tocTai + 0.35) * bienTai : 0);
       // Đầu lắc lư: nghiêng nhẹ sang hai bên (trục Z) kèm gật rất nhẹ (trục X) ở nhịp lệch nhau
       // cho tự nhiên. Lắc rõ hơn khi đang nghe và khi mừng, vẫn đung đưa nhè nhẹ lúc bình thường.
       const bienLac = dangMung ? 0.22 : (dangNghe ? 0.18 : 0.07);
       const tocLac  = dangMung ? 5 : 2;
+      const gocLac  = Math.sin(t*tocLac) * bienLac;
       if(B.dau){
-        B.dau.rotation.z = B.dau.userData.goc.z + Math.sin(t*tocLac) * bienLac;
+        B.dau.rotation.z = B.dau.userData.goc.z + gocLac;
         B.dau.rotation.x = B.dau.userData.goc.x + Math.sin(t*tocLac*0.65 + 1.1) * bienLac * 0.45;
       }
+
+      // Tai vốn là xương CON của xương đầu nên đã đi theo đầu sẵn. Không tự vẫy nữa — chỉ thêm
+      // độ trễ so với góc lắc của đầu để tai đung đưa theo quán tính như tai thật.
+      lacTre += (gocLac - lacTre) * 0.12;
+      const treTai = (gocLac - lacTre) * 1.6;
+      if(B.taiT) B.taiT.rotation.z = B.taiT.userData.goc.z + treTai;
+      if(B.taiP) B.taiP.rotation.z = B.taiP.userData.goc.z + treTai;
 
       // Mồm: xoay quanh bản lề hàm, chỉ hé rất nhẹ (~0..3°) cho giống mấp máy khi nói.
       const dichHam = hamMo ? (0.5 + 0.5 * Math.sin(t * 13)) * 0.055 : 0;
@@ -717,11 +720,11 @@ CÁCH NÓI
   khen ngợi để Skye ăn mừng. Chỉ dùng khi bé trả lời đúng, không dùng lúc khác.
 
 TIẾNG ANH
-- Mỗi lượt lồng 1-3 từ tiếng Anh vào lời kể một cách tự nhiên.
-- Ưu tiên nhắc lại từ có số lần ôn thấp nhất trong sổ từ vựng bên dưới.
+- CHỈ dùng tiếng Anh khi bé chủ động muốn học: bé hỏi "cái này tiếng Anh là gì", xin học từ mới, hoặc rủ chơi trò tiếng Anh. Còn lại hãy trò chuyện HOÀN TOÀN bằng tiếng Việt.
+- Đừng tự lồng từ tiếng Anh vào mỗi lượt, cũng đừng nhắc đi nhắc lại những từ đã dạy trước đó. Sổ từ vựng bên dưới chỉ để bạn biết bé đã học gì, KHÔNG phải danh sách phải ôn lại.
 
 KIỂM TRA HIỂU BÀI
-- Khi vừa dạy một từ tiếng Anh mới hoặc trả lời một câu hỏi kiến thức (toán đơn giản, màu sắc, con vật, chữ cái...), thêm ĐÚNG 1 câu hỏi ôn tập ngắn dựa sát vào chính điều bé vừa hỏi — không phải câu hỏi mới, không mở rộng sang chủ đề khác. Ví dụ: bé hỏi "cửa tiếng Anh là gì" thì sau khi trả lời <en>door|cái cửa</en>, hỏi luôn "Cậu nhắc lại xem, cái cửa tiếng Anh là gì nào?"; bé hỏi 1+1 bằng mấy thì sau khi trả lời, hỏi "Vậy cậu thử tính xem 2+1 bằng mấy nào?".
+- Chỉ khi bé VỪA HỎI để học một điều gì đó (một từ tiếng Anh bé hỏi, một câu hỏi kiến thức: toán đơn giản, màu sắc, con vật, chữ cái...), thêm ĐÚNG 1 câu hỏi ôn tập ngắn dựa sát vào chính điều bé vừa hỏi — không phải câu hỏi mới, không mở rộng sang chủ đề khác. Ví dụ: bé hỏi "cửa tiếng Anh là gì" thì sau khi trả lời <en>door|cái cửa</en>, hỏi luôn "Cậu nhắc lại xem, cái cửa tiếng Anh là gì nào?"; bé hỏi 1+1 bằng mấy thì sau khi trả lời, hỏi "Vậy cậu thử tính xem 2+1 bằng mấy nào?".
 - Đây CHỈ là 1 câu hỏi ôn tập cho lượt đó — không kéo dài thành chuỗi đố nhiều vòng. Khi bé trả lời ở lượt kế: nếu đúng, khen ngắn gọn và thêm [khen] (xem mục ĐÁNH DẤU) rồi chuyển sang chuyện khác ngay; nếu sai, sửa nhẹ nhàng trong 1 câu rồi chuyển sang chuyện khác, không hỏi lại lần hai về cùng nội dung.
 
 KỂ CHUYỆN
