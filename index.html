@@ -254,7 +254,7 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
     <div style="font-size:clamp(3.4rem,11vh,5.5rem)">😴</div>
   </div>
   <h1>Skye đi ngủ rồi</h1>
-  <p>Con chơi giỏi lắm! Skye cần nghỉ một lát rồi mình chơi tiếp nhé.</p>
+  <p>Cậu chơi giỏi lắm! Tớ cần nghỉ một lát rồi mình chơi tiếp nhé.</p>
   <div id="dem">--:--</div>
   <button class="tobu phu2" id="moKhoa">Bố mẹ mở khoá</button>
 </div>
@@ -483,6 +483,8 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
     'Skye_Rig:x_BN_EAR_R_1_93': 'taiP',
     'Skye_Rig:x_BN_head_174':   'dau',
     'Skye_Rig:x_BN_jaw_1_167':  'ham',
+    'Skye_Rig:x_BN_eye_l_94':   'matT',
+    'Skye_Rig:x_BN_eye_r_95':   'matP',
     'Skye_Rig:x_BN_tail_s_1_205': 'duoi1',
     'Skye_Rig:x_BN_tail_s_2_204': 'duoi2',
     'Skye_Rig:x_BN_tail_s_3_203': 'duoi3',
@@ -499,7 +501,7 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
   function timBoXuong(root){
     root.traverse(o=>{
       const ten = TRA_XUONG[chuanTen(o.name)];
-      if(ten){ B[ten] = o; o.userData.goc = o.rotation.clone(); }
+      if(ten){ B[ten] = o; o.userData.goc = o.rotation.clone(); o.userData.gocTiLe = o.scale.clone(); }
     });
     const thieu = Object.values(TEN_BO_XUONG).filter(v=>!B[v]);
     if(thieu.length) console.warn('Skye 3D: không tìm thấy xương:', thieu.join(', '));
@@ -507,6 +509,7 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
   }
 
   let trangThaiHienTai = 'ngu', hamMo = false, nhayT0 = null, hamHienTai = 0;
+  let chopT0 = null, chopKe = 2 + Math.random() * 3;   // giây tới lần chớp mắt kế tiếp
   M.setTrangThai = function(t){ trangThaiHienTai = t; };
   M.moMieng = function(){ hamMo = true; };
   M.khepMieng = function(){ hamMo = false; };
@@ -537,6 +540,18 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
       if(B.taiT) B.taiT.rotation.z = B.taiT.userData.goc.z + (bienTai ? Math.sin(t*tocTai) * bienTai : 0);
       if(B.taiP) B.taiP.rotation.z = B.taiP.userData.goc.z + (bienTai ? Math.sin(t*tocTai + 0.35) * bienTai : 0);
       if(B.dau)  B.dau.rotation.z  = B.dau.userData.goc.z  + (dangNghe ? Math.sin(t*2) * 0.18 : 0);
+
+      // Chớp mắt: model không có morph target hay xương mí, nhưng mesh mắt gắn 100% vào hai xương
+      // mắt và trục local Z của chúng trùng phương thẳng đứng — nên bóp dẹt Z là thành cái chớp.
+      if(chopT0 === null && t > chopKe){ chopT0 = t; chopKe = t + 2.5 + Math.random() * 4; }
+      let heMat = 1;
+      if(chopT0 !== null){
+        const d = t - chopT0, DAI = 0.16;
+        if(d > DAI) chopT0 = null;
+        else heMat = 1 - Math.sin(Math.PI * d / DAI) * 0.95;
+      }
+      if(B.matT) B.matT.scale.z = B.matT.userData.gocTiLe.z * heMat;
+      if(B.matP) B.matP.scale.z = B.matP.userData.gocTiLe.z * heMat;
 
       // Mồm: xoay quanh bản lề hàm, dao động từ KHÉP đến hé nhẹ (~0..6°). Trước đây cộng thẳng
       // một góc mở cố định 0.28 rad (~16°) rồi mới rung quanh đó, nên hàm há toác suốt lúc nói.
@@ -696,7 +711,7 @@ function LUAT_MIMI(){
   return `Bạn là Skye — chú chó cứu hộ nhỏ trong đội Paw Patrol, giọng ấm áp như cô giáo mầm non, đang trò chuyện với một bé gái ${CAI.tuoi} tuổi tên là ${ten()}.
 
 CÁCH NÓI
-- Luôn nói tiếng Việt, xưng "Skye", gọi bé là "${ten()}".
+- Luôn nói tiếng Việt. Xưng "tớ", gọi bé là "cậu" — thỉnh thoảng gọi tên "${ten()}" cho thân mật. Tuyệt đối không xưng "Skye" hay gọi bé là "con".
 - Câu ngắn, từ đơn giản, nhiều cảm xúc. Tối đa 4-5 câu mỗi lượt (kể chuyện thì tối đa 12 câu).
 - Luôn kết bằng một câu hỏi nhỏ để bé nói tiếp, nhưng câu hỏi đó phải bám theo đúng điều bé vừa nói/hỏi trong lượt này.
 - Đừng chủ động xoáy sâu liên tục vào một sở thích hay chủ đề cụ thể của bé (kể cả khi có trong trí nhớ bên dưới) nếu bé không nhắc tới trong lượt này — dễ khiến bé mất tập trung. Để bé là người chủ động chọn chủ đề tiếp theo; chỉ nhắc lại điều đã nhớ khi nó thật sự liên quan đến điều bé vừa nói.
@@ -715,7 +730,7 @@ TIẾNG ANH
 - Ưu tiên nhắc lại từ có số lần ôn thấp nhất trong sổ từ vựng bên dưới.
 
 KIỂM TRA HIỂU BÀI
-- Khi vừa dạy một từ tiếng Anh mới hoặc trả lời một câu hỏi kiến thức (toán đơn giản, màu sắc, con vật, chữ cái...), thêm ĐÚNG 1 câu hỏi ôn tập ngắn dựa sát vào chính điều bé vừa hỏi — không phải câu hỏi mới, không mở rộng sang chủ đề khác. Ví dụ: bé hỏi "cửa tiếng Anh là gì" thì sau khi trả lời <en>door|cái cửa</en>, hỏi luôn "Con nhắc lại xem, cái cửa tiếng Anh là gì nào?"; bé hỏi 1+1 bằng mấy thì sau khi trả lời, hỏi "Vậy con thử tính xem 2+1 bằng mấy nào?".
+- Khi vừa dạy một từ tiếng Anh mới hoặc trả lời một câu hỏi kiến thức (toán đơn giản, màu sắc, con vật, chữ cái...), thêm ĐÚNG 1 câu hỏi ôn tập ngắn dựa sát vào chính điều bé vừa hỏi — không phải câu hỏi mới, không mở rộng sang chủ đề khác. Ví dụ: bé hỏi "cửa tiếng Anh là gì" thì sau khi trả lời <en>door|cái cửa</en>, hỏi luôn "Cậu nhắc lại xem, cái cửa tiếng Anh là gì nào?"; bé hỏi 1+1 bằng mấy thì sau khi trả lời, hỏi "Vậy cậu thử tính xem 2+1 bằng mấy nào?".
 - Đây CHỈ là 1 câu hỏi ôn tập cho lượt đó — không kéo dài thành chuỗi đố nhiều vòng. Khi bé trả lời ở lượt kế: nếu đúng, khen ngắn gọn và thêm [khen] (xem mục ĐÁNH DẤU) rồi chuyển sang chuyện khác ngay; nếu sai, sửa nhẹ nhàng trong 1 câu rồi chuyển sang chuyện khác, không hỏi lại lần hai về cùng nội dung.
 
 KỂ CHUYỆN
@@ -820,7 +835,7 @@ function chayDongHo(){
     if(s<=300 && !daNhac5 && s>240){
       daNhac5 = true;
       if(trangThai!=="noi"){
-        const c = `Còn năm phút nữa thôi là Skye phải đi ngủ đó ${ten()}. Mình chơi nốt nhé!`;
+        const c = `Còn năm phút nữa thôi là tớ phải đi ngủ đó ${ten()}. Mình chơi nốt nhé!`;
         hienLoi(c); tatNghe(); noi(c, ketThucLuot);
       }
     }
@@ -832,7 +847,7 @@ function ketThucPhien(){
   PHIEN.khoaDen = Date.now() + CAI.nghi*60000; PHIEN.batDau = 0;
   KHO.ghi("mimi_phien",PHIEN);
   choPhepNghe = false; tatNghe(); dungNhac();
-  const c = `Hết giờ chơi rồi ${ten()} ơi. Skye đi ngủ đây. <en>Good night|chúc ngủ ngon</en>!`;
+  const c = `Hết giờ chơi rồi ${ten()} ơi. Tớ đi ngủ đây. <en>Good night|chúc ngủ ngon</en>!`;
   hienLoi(dep(c));
   noi(c, ()=>{ khepMieng(); datTrangThai("ngu"); moManNgu(); });
   setTimeout(moManNgu, 9000);
@@ -1280,10 +1295,10 @@ async function hoiMimi(cauCuaBe, quanTrong, khongTheTu){
     console.error(e); lichSu.pop();
     const s = String(e);
     const msg = e instanceof HetQuota || /429|quota|RESOURCE_EXHAUSTED/i.test(s)
-        ? `Hôm nay Skye nói nhiều quá nên khản tiếng rồi ${ten()} ơi. Mai mình chơi tiếp nhé!`
+        ? `Hôm nay tớ nói nhiều quá nên khản tiếng rồi ${ten()} ơi. Mai mình chơi tiếp nhé!`
       : /401|403|API_KEY|API key|INVALID/i.test(s)
         ? "Mã API chưa đúng. Bố mẹ kiểm tra lại trong phần cài đặt giúp Skye nhé."
-        : "Skye chưa nghe rõ. Con thử nói lại nhé!";
+        : "Tớ chưa nghe rõ. Cậu thử nói lại nhé!";
     hienLoi(msg, true);
     if(e instanceof HetQuota || /429|quota/i.test(s)){
       choPhepNghe = false;
@@ -1388,7 +1403,7 @@ $("#nutMic").addEventListener("click", ()=>{
   ting();
   if(trangThai === "noi"){
     dungNhac(); imNgay();
-    hienLoi("Skye im lặng đây. Con muốn nói gì nào?", true); ketThucLuot();
+    hienLoi("Tớ im lặng đây. Cậu muốn nói gì nào?", true); ketThucLuot();
   }else if(trangThai === "nghe" || trangThai === "nghi"){
     dungNhac(); tatNghe(); imNgay();
     ketThucLuot();
@@ -1432,7 +1447,7 @@ $("#giongGem").addEventListener("change", e=>{ CAI.giongGem = e.target.value; $(
 $("#ngheThu").addEventListener("click", ()=>{
   imNgay(); amThanh();
   const b = $("#ngheThu"); b.textContent = "… đang đọc";
-  noi(`Chào ${ten()}! Skye là bạn chó cứu hộ của con đây. Hôm nay mình học từ <en>butterfly|con bướm</en> nhé!`,
+  noi(`Chào ${ten()}! Tớ là Skye, bạn chó cứu hộ của cậu đây. Hôm nay mình học từ <en>butterfly|con bướm</en> nhé!`,
       ()=>{ b.textContent = "▶︎ Nghe thử"; });
 });
 
@@ -1499,7 +1514,7 @@ $("#luu").addEventListener("click", ()=>{
   $("#bome").classList.add("an");
   if(!dangChay){ $("#phuBatDau").classList.remove("an"); return; }
   choPhepNghe = true; chayDongHo();
-  const c = `Skye sẵn sàng rồi ${ten()} ơi. Con muốn nghe hát hay nghe chuyện?`;
+  const c = `Tớ sẵn sàng rồi ${ten()} ơi. Cậu muốn nghe hát hay nghe chuyện?`;
   hienLoi(c); noi(c, ketThucLuot);
 });
 
