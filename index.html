@@ -385,13 +385,15 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
       if(/Goggles_Face|GogglesStrap_Face/i.test(o.name)) o.visible = false;
     });
 
+    model.updateMatrixWorld(true);  // bắt buộc trước khi đo bounding box, nếu không matrixWorld còn ở identity
     const box = new THREE.Box3().setFromObject(model);
     boxSize = box.getSize(new THREE.Vector3());
     const tam = box.getCenter(new THREE.Vector3());
-    const banKinh = Math.max(boxSize.x, boxSize.y, boxSize.z) * 0.6;
-    const khoangCach = banKinh / Math.sin((camera.fov * Math.PI / 180) / 2);
+    const banKinh = Math.max(boxSize.x, boxSize.y, boxSize.z, 0.001) * 0.6;
+    const khoangCach = Math.max(banKinh / Math.sin((camera.fov * Math.PI / 180) / 2), 0.5);
     camera.position.set(tam.x, tam.y + boxSize.y * 0.05, tam.z + khoangCach);
     camera.lookAt(tam);
+    console.log('Skye 3D: model loaded. boxSize=', boxSize, 'center=', tam, 'cameraPos=', camera.position);
 
     canvas.style.display = 'block';
     svg.style.display = 'none';
