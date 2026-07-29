@@ -390,7 +390,15 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
       });
 
       model.updateMatrixWorld(true);  // bắt buộc trước khi đo bounding box, nếu không matrixWorld còn ở identity
-      const box = new THREE.Box3().setFromObject(model);
+      // Đo theo vị trí thế giới thực của các bone, không dùng Box3.setFromObject(model): với mesh
+      // có skin, hình học thô (chưa qua biến dạng theo xương) có thể lớn hơn RẤT nhiều so với
+      // kích thước hiển thị thật lúc render (đây là nguyên nhân Skye bị bé tí xíu).
+      const box = new THREE.Box3();
+      let demBone = 0;
+      model.traverse(o=>{
+        if(o.isBone){ box.expandByPoint(o.getWorldPosition(new THREE.Vector3())); demBone++; }
+      });
+      if(demBone === 0) box.setFromObject(model);  // dự phòng nếu model không có bone
       boxSize = box.getSize(new THREE.Vector3());
       const tam = box.getCenter(new THREE.Vector3());
       const banKinh = Math.max(boxSize.x, boxSize.y, boxSize.z, 0.001) * 0.6;
@@ -403,7 +411,7 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
       camera.near = Math.max(khoangCach * 0.01, 0.01);
       camera.far = khoangCach * 3;
       camera.updateProjectionMatrix();
-      console.log('Skye 3D: model loaded OK. boxSize=', boxSize.toArray(), 'center=', tam.toArray(), 'cameraPos=', camera.position.toArray(), 'near/far=', camera.near, camera.far);
+      console.log('Skye 3D: model loaded OK. demBone=', demBone, 'boxSize=', boxSize.toArray(), 'center=', tam.toArray(), 'cameraPos=', camera.position.toArray(), 'near/far=', camera.near, camera.far);
 
       canvas.style.display = 'block';
       svg.style.display = 'none';
