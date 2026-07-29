@@ -872,16 +872,56 @@ async function noiGemini(cau, xongThi){
   }
 }
 
+/* ---------- Google Cloud TTS (tầng mặc định) ---------- */
+async function taoTiengCloud(chu){
+  const r = CAI.proxy
+    ? await fetch(CAI.proxy.replace(/\/+$/,"") + "?m=cloudtts", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ _text:chu, _toc:CAI.toc }) })
+    : await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(CAI.key)}`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          input:{ text: chu },
+          voice:{ languageCode:"vi-VN", name:"vi-VN-Wavenet-A" },
+          audioConfig:{ audioEncoding:"LINEAR16", speakingRate: CAI.toc }
+        }) });
+  const t = await r.text();
+  if(!r.ok) throw new Error(`HTTP ${r.status} ${t.slice(0,140)}`);
+  const j = JSON.parse(t);
+  if(!j.audioContent) throw new Error("khong co du lieu am thanh");
+  return giaiMaAm(j.audioContent);
+}
+async function noiCloud(cau, xongThi, quanTrong){
+  datTrangThai("nghi");
+  const chu = String(cau||"").replace(RE_EN,"$1 — $2").replace(/\[nhac:[a-z_]+\]/gi,"").trim();
+  try{
+    const buf = await taoTiengCloud(chu);
+    if(dungNoi) return;
+    datTrangThai("noi"); moMieng();
+    await new Promise(xong=>{
+      const c = amThanh(); if(c.state==="suspended") c.resume();
+      const s = c.createBufferSource();
+      s.buffer = buf; s.connect(c.destination);
+      s.onended = xong; nguonDangPhat = s; s.start();
+    });
+    khepMieng(); xongThi && xongThi();
+  }catch(e){
+    console.warn("Cloud TTS lỗi, thử tầng kế tiếp:", e);
+    khepMieng();
+    const cs = CAI.dungGem || "diem";
+    const xin = cs !== "tat" && (cs === "luon" || quanTrong) && conQuota("tts");
+    if(xin) noiGemini(cau, xongThi);
+    else    noiMay(cau, xongThi);
+  }
+}
+
 /* ---------- bộ chuyển ----------
-   Hạn mức giọng Gemini rất nhỏ (8 lượt/ngày), nên bố mẹ chọn tiêu vào đâu:
-   tat  = không dùng     diem = chỉ lời chào và lúc kể chuyện     luon = mọi lượt   */
+   3 tầng tự động: Cloud TTS (mặc định, hạn mức rất lớn) -> Gemini TTS (khoảnh khắc quan trọng,
+   hạn mức 8 lượt/ngày) -> giọng máy (lưới an toàn cuối, luôn hoạt động, không cần key). */
 function noi(cau, xongThi, quanTrong){
   dungNoi = false;
-  const cs = CAI.dungGem || "diem";
-  const xin = CAI.cheDo === "gemini" && sanSang() && cs !== "tat"
-           && (cs === "luon" || quanTrong) && conQuota("tts");
-  if(xin) noiGemini(cau, xongThi);
-  else    noiMay(cau, xongThi);
+  if(sanSang()) noiCloud(cau, xongThi, quanTrong);
+  else          noiMay(cau, xongThi);
 }
 function imNgay(){
   dungNoi = true;
