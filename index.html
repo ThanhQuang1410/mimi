@@ -285,10 +285,15 @@ body.ghinho #but{opacity:1;animation:viet 1.1s ease-in-out infinite}
     <option value="120">2 tiếng</option><option value="240">4 tiếng</option></select>
 
   <h3>Giọng nói của Skye</h3>
-  <p class="ghi">Skye dùng <b>Google Cloud Text-to-Speech</b> làm giọng chính. Vào
-    <a href="https://console.cloud.google.com/apis/library/texttospeech.googleapis.com" target="_blank" rel="noopener">Google Cloud Console</a>
-    và bật API này cho cùng project với mã API Gemini phía trên. Nếu chưa bật hoặc lỗi mạng, Skye
-    tự chuyển sang giọng dự phòng của máy.</p>
+  <p class="ghi">Skye dùng <b>Google Cloud Text-to-Speech</b> làm giọng chính. Key Gemini ở trên
+    thường không dùng chung được (Google giới hạn loại key đó chỉ gọi được Gemini), nên cần 1 mã
+    API <b>riêng</b> — tạo tại <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console → Credentials → Create credentials → API key</a>,
+    rồi vào phần API restrictions của key đó bật quyền
+    <a href="https://console.cloud.google.com/apis/library/texttospeech.googleapis.com" target="_blank" rel="noopener">Cloud Text-to-Speech API</a>.
+    Nếu chưa nhập hoặc lỗi mạng, Skye tự chuyển sang giọng Gemini hoặc giọng dự phòng của máy.</p>
+
+  <label for="keyTts">Mã API Cloud Text-to-Speech</label>
+  <input id="keyTts" type="password" placeholder="AIza..." autocomplete="off" spellcheck="false">
 
   <label for="toc">Tốc độ nói — chậm lại cho bé dễ nghe</label>
   <div class="truot"><input type="range" id="toc" min="0.5" max="1.3" step="0.02"><span id="tocSo">0.88</span></div>
@@ -587,8 +592,9 @@ function kiemNgay(){ if(DUNG.ngay !== ngayTBD()) DUNG = { ngay:ngayTBD(), chat:0
 function demDung(loai){ kiemNgay(); DUNG[loai]++; KHO.ghi("mimi_dung", DUNG); }
 function conQuota(loai){ kiemNgay(); return DUNG[loai] < TRAN[loai]; }
 
-let CAI = KHO.doc("mimi_cai", { key:"", proxy:"", ten:"", tuoi:4, phut:30, nghi:60,
+let CAI = KHO.doc("mimi_cai", { key:"", keyTts:"", proxy:"", ten:"", tuoi:4, phut:30, nghi:60,
                                 toc:.88, giongGem:"Leda", dungGem:"diem" });
+if(CAI.keyTts === undefined) CAI.keyTts = "";
 if(CAI.toc === undefined) CAI.toc = .88;
 if(CAI.giongGem === undefined) CAI.giongGem = "Leda";
 if(CAI.dungGem === undefined) CAI.dungGem = "diem";
@@ -1041,13 +1047,17 @@ async function noiGemini(cau, xongThi){
   }
 }
 
-/* ---------- Google Cloud TTS (tầng mặc định) ---------- */
+/* ---------- Google Cloud TTS (tầng mặc định) ----------
+   Dùng key RIÊNG với key Gemini chat: key Gemini lấy từ AI Studio thường bị gắn service
+   account, chỉ được phép gọi Gemini/Vertex, không thêm được Cloud Text-to-Speech vào. Bố mẹ
+   cần tạo 1 API key thường (không qua AI Studio) và bật quyền Cloud TTS riêng cho key đó. */
+const coCloudTts = ()=> !!(CAI.proxy || CAI.keyTts);
 async function taoTiengCloud(chu){
   const r = CAI.proxy
     ? await fetch(CAI.proxy.replace(/\/+$/,"") + "?m=cloudtts", {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ _text:chu, _toc:CAI.toc }) })
-    : await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(CAI.key)}`, {
+    : await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(CAI.keyTts)}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
           input:{ text: chu },
@@ -1061,6 +1071,12 @@ async function taoTiengCloud(chu){
   return giaiMaAm(j.audioContent);
 }
 async function noiCloud(cau, xongThi, quanTrong){
+  if(!coCloudTts()){                          // chưa cấu hình key Cloud TTS, bỏ thẳng xuống tầng dưới
+    const cs = CAI.dungGem || "diem";
+    const xin = cs !== "tat" && (cs === "luon" || quanTrong) && conQuota("tts");
+    if(xin) noiGemini(cau, xongThi); else noiMay(cau, xongThi);
+    return;
+  }
   datTrangThai("nghi");
   const chu = String(cau||"").replace(RE_EN,"$1 — $2").replace(RE_DANHDAU,"").trim();
   try{
@@ -1358,6 +1374,7 @@ function moBoMe(nhac){
   chayThuThu();                       // dọn nốt trí nhớ đang chờ trước khi bố mẹ xem
   $("#loi").textContent = nhac || "";
   $("#key").value = CAI.key; $("#proxy").value = CAI.proxy;
+  $("#keyTts").value = CAI.keyTts;
   $("#ten").value = CAI.ten; $("#tuoi").value = CAI.tuoi;
   $("#phut").value = CAI.phut; $("#nghi").value = CAI.nghi;
   $("#toc").value = CAI.toc; $("#tocSo").textContent = (+CAI.toc).toFixed(2);
@@ -1385,7 +1402,7 @@ $("#luu").addEventListener("click", ()=>{
   const k = $("#key").value.trim(), p = $("#proxy").value.trim();
   if(!k && !p){ $("#loi").textContent = "Cần mã API hoặc địa chỉ máy chủ trung gian."; return; }
   const tenCu = CAI.ten;
-  CAI = { ...CAI, key:k, proxy:p, ten:$("#ten").value.trim(), tuoi:+$("#tuoi").value,
+  CAI = { ...CAI, key:k, keyTts:$("#keyTts").value.trim(), proxy:p, ten:$("#ten").value.trim(), tuoi:+$("#tuoi").value,
           phut:+$("#phut").value, nghi:+$("#nghi").value,
           toc:+$("#toc").value, giongGem:$("#giongGem").value, dungGem:$("#dungGem").value };
   luuCai();
