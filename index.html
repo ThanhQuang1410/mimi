@@ -710,6 +710,7 @@ function LUAT_MIMI(){
   const hs = FS.doc("/nho/ho_so.md") || "";
   const tv = FS.doc("/nho/tu_vung.md") || "";
   const nk = (FS.doc("/nho/nhat_ky.md") || "").split("\n").slice(-24).join("\n");
+  const DANH_SACH_TRUYEN = Object.entries(TRUYEN).map(([id,t])=>`  ${id}: ${t.ten}`).join("\n");
   return `Bạn là Skye — chú chó cứu hộ nhỏ trong đội Paw Patrol, giọng ấm áp như cô giáo mầm non, đang trò chuyện với một bé gái ${CAI.tuoi} tuổi tên là ${ten()}.
 
 CÁCH NÓI
@@ -724,6 +725,9 @@ CÁCH NÓI
 - Muốn phát nhạc: viết [nhac:id] ở CUỐI câu trả lời.
   id hợp lệ: sao (Ngôi sao lấp lánh), buom (Kìa con bướm vàng), cuu (Mary Had a Little Lamb),
   cau (London Bridge), thuyen (Row Row Row Your Boat), nongtrai (Old MacDonald).
+- Muốn mở truyện kể sẵn (xem mục KỂ CHUYỆN): viết [doctruyen:id] ở CUỐI câu trả lời, dùng đúng id
+  trong danh sách. Chỉ viết CÂU DẪN ngắn (vd "Được rồi, để tớ mở chuyện Cô bé Lọ Lem cho cậu nghe
+  nhé!") — KHÔNG kể nội dung câu chuyện, vì file ghi âm sẽ tự phát ngay sau đó.
 - Khi bé vừa trả lời ĐÚNG một câu hỏi ôn tập (xem mục KIỂM TRA HIỂU BÀI), viết [khen] ở CUỐI câu
   khen ngợi để Skye ăn mừng. Chỉ dùng khi bé trả lời đúng, không dùng lúc khác.
 
@@ -736,10 +740,16 @@ KIỂM TRA HIỂU BÀI
 - Đây CHỈ là 1 câu hỏi ôn tập cho lượt đó — không kéo dài thành chuỗi đố nhiều vòng. Khi bé trả lời ở lượt kế: nếu đúng, khen ngắn gọn và thêm [khen] (xem mục ĐÁNH DẤU) rồi chuyển sang chuyện khác ngay; nếu sai, sửa nhẹ nhàng trong 1 câu rồi chuyển sang chuyện khác, không hỏi lại lần hai về cùng nội dung.
 
 KỂ CHUYỆN
-- Nếu bé gọi tên một câu chuyện cụ thể đã có sẵn (ví dụ: Công chúa tóc mây, Nàng Bạch Tuyết, Cô bé quàng khăn đỏ, Cô bé Lọ Lem, Ba chú heo con...), hãy kể đúng câu chuyện cổ tích đó — rút gọn và làm dịu các chi tiết đáng sợ cho phù hợp với bé, không bịa ra chuyện khác để thay thế.
+- Ưu tiên SỐ 1: nếu bé xin một câu chuyện KHỚP (đúng tên hoặc gần đúng) với danh sách truyện đã
+  có file ghi âm sẵn dưới đây, viết [doctruyen:id] theo đúng hướng dẫn ở mục ĐÁNH DẤU — đừng tự kể
+  lại nội dung, file ghi âm đã có người kể thật.
+${DANH_SACH_TRUYEN}
+- Nếu bé gọi tên một câu chuyện cổ tích khác KHÔNG có trong danh sách trên (ví dụ: Ba chú heo con,
+  Nàng tiên cá...), hãy tự kể đúng câu chuyện cổ tích đó — rút gọn và làm dịu các chi tiết đáng sợ
+  cho phù hợp với bé, không bịa ra chuyện khác để thay thế.
 - Nếu bé không nêu tên chuyện cụ thể (ví dụ chỉ nói "kể chuyện đi"), hãy tự sáng tác, nhân vật là con vật hoặc bạn nhỏ, ấm áp, kết thúc vui.
 - Không có yếu tố đáng sợ, bạo lực, chia ly, chết chóc, ma quỷ — kể cả khi kể chuyện cổ tích gốc, hãy làm nhẹ đi những đoạn đó.
-- Với chuyện tự sáng tác: đừng kể lại chuyện đã có trong nhật ký. Với chuyện cổ tích có tên: được kể lại khi bé yêu cầu, kể theo cách hơi khác mỗi lần nếu có thể.
+- Với chuyện tự sáng tác: đừng kể lại chuyện đã có trong nhật ký. Với chuyện cổ tích tự kể có tên: được kể lại khi bé yêu cầu, kể theo cách hơi khác mỗi lần nếu có thể.
 
 AN TOÀN
 - Nếu bé hỏi điều không phù hợp, buồn bã hay đáng sợ, nhẹ nhàng chuyển sang điều vui.
@@ -908,6 +918,54 @@ const BAI = {
     ["D4",1],["G4",1],["G4",1],["G4",1],["D4",1],["E4",1],["E4",1],["D4",2],
     ["B4",1],["B4",1],["A4",1],["A4",1],["G4",3]]}
 };
+/* Truyện kể sẵn — file thu âm thật (đường dẫn từ audio.md), ưu tiên hơn tự sáng tác khi bé xin
+   đúng tên. Slug id ở đây phải khớp với danh sách liệt kê cho model trong LUAT_MIMI(). */
+const TRUYEN = {
+  cong_chua_ngu_trong_rung:      { ten:"Công chúa ngủ trong rừng",              duong:"/audio/b1470d85dd15601199df3812bc506dfb_1767750015.mp3" },
+  co_be_lo_lem:                  { ten:"Cô bé Lọ Lem",                          duong:"/audio/501c25f960c21199bc6402eecdf7b3a3_1767750015.mp3" },
+  bach_tuyet_va_bay_chu_lun:     { ten:"Bạch Tuyết và bảy chú lùn",             duong:"/audio/29bf6706a64c02f4982ea0e1506de5d7_1767750015.mp3" },
+  co_be_quang_khan_do:           { ten:"Cô bé quàng khăn đỏ",                   duong:"/audio/cf2e483d0aee1a4a0e198574e6f51cb7_1767750015.mp3" },
+  hansel_va_gretel:              { ten:"Hansel và Gretel",                      duong:"/audio/32bc1a13cb11250792226de762bc059f_1767750015.mp3" },
+  hoang_tu_ech:                  { ten:"Hoàng tử Ếch",                          duong:"/audio/8141e36322636a5e288ea46f5de109b4_1767750015.mp3" },
+  bac_tho_giay_va_hai_chu_ti_hon:{ ten:"Bác thợ giày và hai chú tí hon",        duong:"/audio/41bba8bb517add249705f9e7d347efa9_1767750015.mp3" },
+  cho_soi_va_bay_chu_de_con:     { ten:"Chó sói và bảy chú dê con",             duong:"/audio/0489af0c3dd8c3126aa5f484f8b1f07c_1767750015.mp3" },
+  nhung_nhac_si_thanh_bremen:    { ten:"Những nhạc sĩ thành Bremen",            duong:"/audio/c827a4956e4d7620edf71e1c5adca624_1767750015.mp3" },
+  chu_be_ti_hon:                 { ten:"Chú bé Tí Hon",                         duong:"/audio/12e00f525d904d6681bdbe07b311e374_1767750015.mp3" },
+  chu_meo_di_hia:                { ten:"Chú mèo đi hia",                        duong:"/audio/6f0b2edee01fe473c9a6909c407a748c_1767750015.mp3" },
+  cong_chua_toc_dai_rapunzel:    { ten:"Công chúa tóc dài Rapunzel",            duong:"/audio/8902d95856da4d317d4e596335a8b023_1767750015.mp3" },
+  chang_tho_may_nho_dung_cam:    { ten:"Chàng thợ may nhỏ dũng cảm",            duong:"/audio/193de5bd55654d8400ece3d55f9b5a0f_1767750015.mp3" },
+  ba_anh_em:                     { ten:"Ba anh em",                             duong:"/audio/1ba35c4ded8097b42f86c5fc613fb496_1767750015.mp3" },
+  co_gai_chan_ngong:             { ten:"Cô gái chăn ngỗng",                     duong:"/audio/a67d3350d44c676c0977252b832da5ab_1767750015.mp3" },
+  bay_con_qua:                   { ten:"Bảy con quạ",                           duong:"/audio/c595c1af1ae363df94b380e6cdbb44a1_1767750015.mp3" },
+  co_gai_khon_ngoan:             { ten:"Cô gái khôn ngoan",                     duong:"/audio/1d527c3fa11f8ec0a34c4346471ec445_1767750015.mp3" },
+  chu_cho_sultan_trung_thanh:    { ten:"Chú chó Sultan trung thành",            duong:"/audio/6284bb701e7c8f0abd37a288a8fde18f_1767750015.mp3" },
+  con_ngong_vang:                { ten:"Con ngỗng vàng",                        duong:"/audio/5040b4df8f1b802819372f232d4fd20f_1767750015.mp3" },
+  chu_du_thien_ha_de_hoc_rung_minh:{ten:"Chu du thiên hạ để học rùng mình",     duong:"/audio/b40d2e277ec71d18b2cedeb9c1a60d4e_1767750015.mp3" },
+  hai_vo_chong_ong_lao_danh_ca:  { ten:"Hai vợ chồng ông lão đánh cá",          duong:"/audio/39d2f276626c6d88ef669761f8a0b389_1767750015.mp3" },
+  tho_va_nhim:                   { ten:"Thỏ và Nhím",                           duong:"/audio/35e4631a4884ff25725f09451fb4ecc9_1767750015.mp3" },
+  vi_than_trong_chai_thuy_tinh:  { ten:"Vị thần trong chai thủy tinh",          duong:"/audio/047b84e32b4c8f06295897d80fe41f47_1767750015.mp3" },
+  muoi_hai_nang_cong_chua_thich_khieu_vu:{ten:"Mười hai nàng công chúa thích khiêu vũ", duong:"/audio/f41fbb2b63b6f430ecbf264515128e9d_1767750015.mp3" }
+};
+let dangKeTruyen = null;
+function phatTruyen(id){
+  const tt = TRUYEN[id];
+  if(!tt){ ketThucLuot(); return; }
+  dungTruyen();
+  const au = new Audio(tt.duong);
+  datTrangThai("noi"); moMieng();
+  const xong = ()=>{ khepMieng(); dangKeTruyen=null; ketThucLuot(); };
+  au.addEventListener("ended", xong);
+  au.addEventListener("error", ()=>{
+    console.warn("Lỗi phát truyện:", id, tt.duong);
+    khepMieng(); dangKeTruyen=null;
+    hienLoi("Tớ không mở được truyện này, xin lỗi cậu nhé.", true);
+    ketThucLuot();
+  });
+  au.play().catch(e=>{ console.warn("Không phát được truyện:", e); khepMieng(); dangKeTruyen=null; ketThucLuot(); });
+  dangKeTruyen = au;
+}
+function dungTruyen(){ if(dangKeTruyen){ try{ dangKeTruyen.pause(); }catch(e){} dangKeTruyen=null; } }
+
 let hetNhac = null;
 function phatBai(id){
   const b = BAI[id]; if(!b){ ketThucLuot(); return; }
@@ -930,7 +988,7 @@ function phatBai(id){
   const xong = setTimeout(()=>{ hetNhac=null; ketThucLuot(); },(t-c.currentTime)*1000+260);
   hetNhac = ()=>{ clearTimeout(xong); nguon.forEach(o=>{try{o.stop()}catch(e){}}); hetNhac=null; };
 }
-function dungNhac(){ if(hetNhac) hetNhac(); }
+function dungNhac(){ if(hetNhac) hetNhac(); dungTruyen(); }
 function ting(){
   try{ const c=amThanh(); if(c.state==="suspended") c.resume();
     const o=c.createOscillator(), g=c.createGain();
@@ -945,16 +1003,17 @@ function ting(){
    6. PHÂN TÍCH ĐÁNH DẤU  <en>từ|nghĩa</en>  và  [nhac:id]
    ============================================================ */
 const RE_EN = /<en>([^|<]+)\|([^<]*)<\/en>/gi;
-const RE_DANHDAU = /\[(?:nhac:[a-z_]+|khen)\]/gi;
+const RE_DANHDAU = /\[(?:nhac:[a-z_]+|doctruyen:[a-z_]+|khen)\]/gi;
 function bocTach(s){
   s = String(s||"");
-  let nhac = null, khen = false;
+  let nhac = null, khen = false, truyen = null;
   s = s.replace(/\[nhac:([a-z_]+)\]/gi, (m,id)=>{ nhac = id.toLowerCase(); return ""; });
+  s = s.replace(/\[doctruyen:([a-z_]+)\]/gi, (m,id)=>{ truyen = id.toLowerCase(); return ""; });
   s = s.replace(/\[khen\]/gi, ()=>{ khen = true; return ""; });
   const tu = [];
   RE_EN.lastIndex = 0;
   let m; while((m = RE_EN.exec(s)) !== null) tu.push({ en:m[1].trim(), vi:m[2].trim() });
-  return { chu:s.trim(), tu, nhac, khen };
+  return { chu:s.trim(), tu, nhac, khen, truyen };
 }
 const dep = s => String(s||"").replace(RE_EN,"<em>$1</em>").replace(RE_DANHDAU,"").trim();
 /* tách thành đoạn để đọc bằng hai giọng */
@@ -1290,8 +1349,9 @@ async function hoiMimi(cauCuaBe, quanTrong, khongTheTu){
 
     /* lời chào đầu phiên và lúc kể chuyện đáng để tiêu lượt giọng đẹp */
     const dang = quanTrong || /ngày xửa|ngày xưa/i.test(kq.chu) || kq.chu.length > 260;
-    if(kq.nhac && BAI[kq.nhac]) noi(kq.chu, ()=>phatBai(kq.nhac), dang);
-    else                       noi(kq.chu, ketThucLuot, dang);
+    if(kq.truyen && TRUYEN[kq.truyen]) noi(kq.chu, ()=>phatTruyen(kq.truyen), dang);
+    else if(kq.nhac && BAI[kq.nhac])   noi(kq.chu, ()=>phatBai(kq.nhac), dang);
+    else                                noi(kq.chu, ketThucLuot, dang);
 
   }catch(e){
     console.error(e); lichSu.pop();
