@@ -949,24 +949,34 @@ const TRUYEN = {
   muoi_hai_nang_cong_chua_thich_khieu_vu:{ten:"Mười hai nàng công chúa thích khiêu vũ", duong:"audio/f41fbb2b63b6f430ecbf264515128e9d_1767750015.mp3" }
 };
 let dangKeTruyen = null;
-function phatTruyen(id){
+/* Dùng chung AudioContext (amThanh()) với giọng nói thay vì thẻ <audio> riêng: một
+   <audio> mới tạo ra ngoài lúc chạm nút (chờ sau khi lời dẫn nói xong) dễ bị Safari/iOS
+   chặn autoplay, trong khi AudioContext đã unlock từ đầu phiên thì phát được luôn. */
+async function phatTruyen(id){
   const tt = TRUYEN[id];
   if(!tt){ ketThucLuot(); return; }
   dungTruyen();
-  const au = new Audio(tt.duong);
   datTrangThai("noi"); moMieng();
   const xong = ()=>{ khepMieng(); dangKeTruyen=null; ketThucLuot(); };
-  au.addEventListener("ended", xong);
-  au.addEventListener("error", ()=>{
-    console.warn("Lỗi phát truyện:", id, tt.duong);
+  try{
+    const r = await fetch(tt.duong);
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const ab = await r.arrayBuffer();
+    const c = amThanh(); if(c.state==="suspended") await c.resume();
+    const buf = await c.decodeAudioData(ab);
+    const s = c.createBufferSource();
+    s.buffer = buf; s.connect(c.destination);
+    s.onended = xong;
+    dangKeTruyen = s;
+    s.start();
+  }catch(e){
+    console.warn("Lỗi phát truyện:", id, tt.duong, e);
     khepMieng(); dangKeTruyen=null;
     hienLoi("Tớ không mở được truyện này, xin lỗi cậu nhé.", true);
     ketThucLuot();
-  });
-  au.play().catch(e=>{ console.warn("Không phát được truyện:", e); khepMieng(); dangKeTruyen=null; ketThucLuot(); });
-  dangKeTruyen = au;
+  }
 }
-function dungTruyen(){ if(dangKeTruyen){ try{ dangKeTruyen.pause(); }catch(e){} dangKeTruyen=null; } }
+function dungTruyen(){ if(dangKeTruyen){ try{ dangKeTruyen.stop(); }catch(e){} dangKeTruyen=null; } }
 
 let hetNhac = null;
 function phatBai(id){
