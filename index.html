@@ -860,7 +860,7 @@ function ketThucPhien(){
   clearInterval(dongHo);
   PHIEN.khoaDen = Date.now() + CAI.nghi*60000; PHIEN.batDau = 0;
   KHO.ghi("mimi_phien",PHIEN);
-  choPhepNghe = false; tatNghe(); dungNhac();
+  choPhepNghe = false; tatNghe(); dungNhac(); nhaKhoaManHinh();
   const c = `Hết giờ chơi rồi ${ten()} ơi. Tớ đi ngủ đây. <en>Good night|chúc ngủ ngon</en>!`;
   hienLoi(dep(c));
   noi(c, ()=>{ khepMieng(); datTrangThai("ngu"); moManNgu(); });
@@ -883,6 +883,7 @@ $("#moKhoa").addEventListener("click", ()=>{
   if(!congBoMe()) return;
   clearInterval(dongHo); PHIEN.khoaDen = 0; KHO.ghi("mimi_phien",PHIEN);
   $("#ngu").classList.add("an"); $("#phuBatDau").classList.remove("an");
+  xinKhoaManHinh();
 });
 
 /* ============================================================
@@ -890,6 +891,18 @@ $("#moKhoa").addEventListener("click", ()=>{
    ============================================================ */
 let ctx = null;
 function amThanh(){ if(!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)(); return ctx; }
+
+/* Giữ màn hình sáng trong lúc chơi: màn hình tự tắt giữa chừng là nguyên nhân chính khiến
+   AudioContext bị hệ điều hành treo/ngắt, gây mất tiếng hoặc phát bị khựng. */
+let khoaManHinh = null;
+async function xinKhoaManHinh(){
+  if(!("wakeLock" in navigator) || !dangChay) return;
+  try{
+    khoaManHinh = await navigator.wakeLock.request("screen");
+    khoaManHinh.addEventListener("release", ()=>{ khoaManHinh = null; });
+  }catch(e){ console.warn("Không khoá được màn hình:", e); }
+}
+function nhaKhoaManHinh(){ if(khoaManHinh){ try{ khoaManHinh.release(); }catch(e){} khoaManHinh=null; } }
 const N = {C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,B4:493.88,C5:523.25,G3:196};
 const BAI = {
   sao:{nhip:.42,not:[["C4",1],["C4",1],["G4",1],["G4",1],["A4",1],["A4",1],["G4",2],
@@ -1487,7 +1500,7 @@ $("#batDau").addEventListener("click", ()=>{
   if(dangKhoa()){ moManNgu(); return; }
   $("#phuBatDau").classList.add("an");
   dangChay = true; choPhepNghe = true;
-  amThanh();
+  amThanh(); xinKhoaManHinh();
   try{ const u = new SpeechSynthesisUtterance(" "); u.volume=0; tongHop.speak(u); }catch(e){}
   batDauPhien();
   if(!sanSang()){ moBoMe("Bố mẹ nhập mã API miễn phí để Skye biết nói nhé."); return; }
@@ -1595,6 +1608,7 @@ $("#luu").addEventListener("click", ()=>{
 document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){ tatNghe(); dungNhac(); imNgay(); }
   else if(dangChay && sanSang() && $("#bome").classList.contains("an") && $("#ngu").classList.contains("an")){
+    xinKhoaManHinh();
     if(conLai() <= 0) ketThucPhien(); else { chayDongHo(); ketThucLuot(); }
   }
 });
