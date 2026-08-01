@@ -17,7 +17,7 @@ function datTrangThai(t){
   /* mỗi trạng thái một mặt nút riêng, để bé nhìn là biết chạm sẽ ra gì */
   const bt = $("#nutMicBt"), nh = $("#nutMicNh");
   if(bt && nh){
-    bt.textContent = t==="nghe" ? "✅" : t==="nghi" ? "💭" : t==="noi" ? "🔊" : "🎙️";
+    bt.textContent = t==="nghe" ? "✅" : t==="nghi" ? "✨" : t==="noi" ? "🔊" : "🎙️";
     nh.textContent = t==="nghe" ? "Nói xong thì chạm" : t==="nghi" ? "Đang nghĩ…" : "Chạm để nói";
   }
 }
