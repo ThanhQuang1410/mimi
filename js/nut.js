@@ -2,24 +2,16 @@
 /* ============================================================
    10. NÚT BẤM
    ============================================================ */
-/* Nút mic là kiểu "giữ để nói": đè xuống thì nghe, thả ra là gửi (xem batGiu/nhaGiu).
-   Dùng pointer event để chuột và ngón tay đi chung một đường, và setPointerCapture để
-   bé có kéo ngón ra ngoài nút thì lúc thả vẫn nhận được. */
-const nutMic = $("#nutMic");
-nutMic.addEventListener("contextmenu", e=>e.preventDefault());   // giữ lâu trên di động không hiện menu
-nutMic.addEventListener("pointerdown", e=>{
+/* Nút mic bật/tắt: chạm một cái là thu, chạm cái nữa là xong (xem batThu/dungThu). */
+$("#nutMic").addEventListener("click", ()=>{
   if(!dangChay) return;
-  e.preventDefault();
-  try{ nutMic.setPointerCapture(e.pointerId); }catch(err){}
-  batGiu();
+  if(dangThu){ ting(); dungThu(); return; }        // đang thu → chốt lại và gửi
+  /* bé chạm lúc Skye đang nói/hát/kể: cắt lời rồi tới lượt bé.
+     Phải cắt TRƯỚC khi mở micro — imNgay() làm callback của tiếng nói đang dở chạy nốt,
+     mà callback đó gọi ketThucLuot(); ketThucLuot() có chốt bỏ qua khi đang thu. */
+  if(trangThai === "noi"){ dungNhac(); imNgay(); }
+  ting(); batThu();
 });
-const thaNut = e=>{
-  if(!dangChay) return;
-  e.preventDefault();
-  nhaGiu();
-};
-nutMic.addEventListener("pointerup", thaNut);
-nutMic.addEventListener("pointercancel", thaNut);
 
 $("#batDau").addEventListener("click", ()=>{
   if(dangKhoa()){ moManNgu(); return; }

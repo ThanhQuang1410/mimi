@@ -13,11 +13,12 @@ function datTrangThai(t){
   if(t !== "ngu") body.classList.add(t);
   /* "ngu" vừa là lúc hết giờ chơi, vừa là thế chờ giữa hai lượt — phân biệt bằng dangChay */
   micChu.textContent = t==="nghe" ? "Skye đang nghe…" : t==="nghi" ? "Skye đang nghĩ…"
-                     : t==="noi"  ? "Skye đang nói…"  : dangChay ? "Giữ nút để nói" : "Skye đang ngủ";
+                     : t==="noi"  ? "Skye đang nói…"  : dangChay ? "Chạm để nói" : "Skye đang ngủ";
+  /* mỗi trạng thái một mặt nút riêng, để bé nhìn là biết chạm sẽ ra gì */
   const bt = $("#nutMicBt"), nh = $("#nutMicNh");
   if(bt && nh){
-    bt.textContent = t==="nghe" ? "🔴" : "🎙️";
-    nh.textContent  = t==="nghe" ? "Thả ra là xong" : t==="nghi" ? "Đang nghĩ…" : "Giữ để nói";
+    bt.textContent = t==="nghe" ? "✅" : t==="nghi" ? "💭" : t==="noi" ? "🔊" : "🎙️";
+    nh.textContent = t==="nghe" ? "Nói xong thì chạm" : t==="nghi" ? "Đang nghĩ…" : "Chạm để nói";
   }
 }
 function hienLoi(t,mo=false){ bong.classList.toggle("mo",mo); bong.innerHTML = t; }

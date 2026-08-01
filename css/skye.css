@@ -87,6 +87,18 @@ body.nghe #nutMic{background:linear-gradient(160deg,#fff,#E9FBF1);animation:micN
 .vien{background:rgba(255,255,255,.9);border-radius:999px;padding:7px 16px;font-family:var(--dm);
   font-weight:700;font-size:.82rem;color:var(--than-mo);box-shadow:0 4px 14px rgba(107,78,94,.1);
   display:flex;align-items:center;gap:8px}
+/* ô chữ nhỏ hiện lời bé vừa nói — bằng chứng là micro đang thu được */
+#loiBe{position:fixed;left:50%;top:calc(max(12px,env(safe-area-inset-top)) + 46px);
+  transform:translate(-50%,-6px);z-index:6;max-width:min(92vw,520px);
+  padding:8px 16px;border-radius:16px;background:rgba(255,255,255,.94);
+  box-shadow:0 6px 18px rgba(107,78,94,.14);border:2px solid var(--bac-ha);
+  font-family:var(--dm);font-weight:700;font-size:.86rem;line-height:1.35;color:var(--than);
+  text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;
+  max-height:4.6em;overflow:hidden;pointer-events:none;
+  opacity:0;transition:opacity .18s ease,transform .18s ease}
+#loiBe.hien{opacity:1;transform:translate(-50%,0)}
+#loiBe.xong{border-color:var(--hong)}
+
 #micCham{width:11px;height:11px;border-radius:50%;background:var(--than-mo);transition:background .3s}
 body.nghe #micCham{background:#4CD07D;animation:dap 1.1s ease-in-out infinite}
 body.nghi #micCham{background:var(--nang);animation:dap .7s ease-in-out infinite}

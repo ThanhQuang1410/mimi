@@ -84,6 +84,9 @@ function moKhoaTruyen(){
 }
 
 function phatTruyen(idTho){
+  /* bé chạm nút cắt lời ngay giữa câu dẫn: tiếng nói bị cắt vẫn chạy nốt callback này,
+     đừng mở truyện đè lên lượt bé đang nói */
+  if(dangThu || choGui) return;
   const id = timTruyen(idTho);
   const tt = id && TRUYEN[id];
   if(!tt){

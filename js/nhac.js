@@ -32,6 +32,7 @@ const BAI = {
 
 let hetNhac = null;
 function phatBai(id){
+  if(dangThu || choGui) return;          // bé vừa cắt lời để nói, đừng hát đè lên
   const b = BAI[id]; if(!b){ ketThucLuot(); return; }
   dungNhac();
   const c = amThanh(); if(c.state==="suspended") c.resume();
