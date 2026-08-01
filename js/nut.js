@@ -11,6 +11,9 @@ $("#nutMic").addEventListener("click", ()=>{
   }else if(trangThai === "nghe" || trangThai === "nghi"){
     dungNhac(); tatNghe(); imNgay();
     ketThucLuot();
+  }else if(choPhepNghe && !dangKhoa()){
+    /* Skye đang tạm nghỉ nghe vì quá ồn (xem tamNghiVoiTiengOn) — bé chạm là nghe lại */
+    hienLoi("Tớ nghe đây!", true); ketThucLuot();
   }
 });
 $("#batDau").addEventListener("click", ()=>{
