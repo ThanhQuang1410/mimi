@@ -11,11 +11,13 @@ function datTrangThai(t){
   trangThai = t;
   body.classList.remove("nghe","nghi","noi");
   if(t !== "ngu") body.classList.add(t);
-  micChu.textContent = t==="nghe"?"Skye đang nghe…":t==="nghi"?"Skye đang nghĩ…":t==="noi"?"Skye đang nói…":"Skye đang ngủ";
+  /* "ngu" vừa là lúc hết giờ chơi, vừa là thế chờ giữa hai lượt — phân biệt bằng dangChay */
+  micChu.textContent = t==="nghe" ? "Skye đang nghe…" : t==="nghi" ? "Skye đang nghĩ…"
+                     : t==="noi"  ? "Skye đang nói…"  : dangChay ? "Giữ nút để nói" : "Skye đang ngủ";
   const bt = $("#nutMicBt"), nh = $("#nutMicNh");
   if(bt && nh){
-    bt.textContent = t==="noi" ? "✋" : "🎙️";
-    nh.textContent  = t==="noi" ? "Chạm để dừng" : t==="nghe" ? "Đang nghe…" : t==="nghi" ? "Đang nghĩ…" : "Chạm để nói";
+    bt.textContent = t==="nghe" ? "🔴" : "🎙️";
+    nh.textContent  = t==="nghe" ? "Thả ra là xong" : t==="nghi" ? "Đang nghĩ…" : "Giữ để nói";
   }
 }
 function hienLoi(t,mo=false){ bong.classList.toggle("mo",mo); bong.innerHTML = t; }

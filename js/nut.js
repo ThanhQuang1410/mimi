@@ -2,20 +2,25 @@
 /* ============================================================
    10. NÚT BẤM
    ============================================================ */
-$("#nutMic").addEventListener("click", ()=>{
+/* Nút mic là kiểu "giữ để nói": đè xuống thì nghe, thả ra là gửi (xem batGiu/nhaGiu).
+   Dùng pointer event để chuột và ngón tay đi chung một đường, và setPointerCapture để
+   bé có kéo ngón ra ngoài nút thì lúc thả vẫn nhận được. */
+const nutMic = $("#nutMic");
+nutMic.addEventListener("contextmenu", e=>e.preventDefault());   // giữ lâu trên di động không hiện menu
+nutMic.addEventListener("pointerdown", e=>{
   if(!dangChay) return;
-  ting();
-  if(trangThai === "noi"){
-    dungNhac(); imNgay();
-    hienLoi("Tớ im lặng đây. Cậu muốn nói gì nào?", true); ketThucLuot();
-  }else if(trangThai === "nghe" || trangThai === "nghi"){
-    dungNhac(); tatNghe(); imNgay();
-    ketThucLuot();
-  }else if(choPhepNghe && !dangKhoa()){
-    /* Skye đang tạm nghỉ nghe vì quá ồn (xem tamNghiVoiTiengOn) — bé chạm là nghe lại */
-    hienLoi("Tớ nghe đây!", true); ketThucLuot();
-  }
+  e.preventDefault();
+  try{ nutMic.setPointerCapture(e.pointerId); }catch(err){}
+  batGiu();
 });
+const thaNut = e=>{
+  if(!dangChay) return;
+  e.preventDefault();
+  nhaGiu();
+};
+nutMic.addEventListener("pointerup", thaNut);
+nutMic.addEventListener("pointercancel", thaNut);
+
 $("#batDau").addEventListener("click", ()=>{
   if(dangKhoa()){ moManNgu(); return; }
   $("#phuBatDau").classList.add("an");
@@ -28,4 +33,3 @@ $("#batDau").addEventListener("click", ()=>{
   lichSu = [];
   hoiMimi("(Bé vừa mở Skye lên. Hãy chào bé thật ấm áp, nhắc lại một điều bạn nhớ về bé nếu có, rồi hỏi bé muốn làm gì. Lượt này CHỈ chào hỏi thôi — tuyệt đối không lồng từ tiếng Anh nào, để dành cho các lượt sau.)", true, true);
 });
-

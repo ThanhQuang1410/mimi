@@ -1,86 +1,121 @@
 "use strict";
 /* ============================================================
-   9. NGHE BÉ NÓI
-   ============================================================ */
+   9. NGHE BÉ NÓI  —  giữ nút để nói, thả ra là gửi
+   ============================================================
+   Kiểu chạm-rồi-nói cũ bắt bé phải nói ngay trong vài giây, còn micro thì mở suốt nên
+   chỗ ồn là nghe loạn. Giữ nút thì micro chỉ mở đúng lúc bé đang nói, bé có bao nhiêu
+   thời gian tuỳ thích, và không còn vòng tự bật lại nào để mà chạy lung tung. */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-/* Chỗ ồn (tivi, quạt, nhiều người nói) làm bộ nhận dạng không bao giờ thấy khoảng lặng để
-   chốt câu: onresult không nổ, phiên nghe treo vô hạn, Skye đứng mãi ở "đang nghe". Vì vậy
-   mỗi lượt nghe phải có hạn giờ, và nghe hụt vài lần liên tiếp thì tạm nghỉ chờ bé chạm. */
-const GIOI_HAN_NGHE = 12000;   // một lượt nghe tối đa 12 giây rồi chốt lại
-const CHO_CHOT      = 2500;    // sau khi bảo dừng, chờ ngần này rồi cắt hẳn
-const NGHI_KHI_ON   = 3;       // hụt liên tiếp bấy nhiêu lần thì thôi tự bật lại
+const GIU_TOI_DA = 30000;   // lỡ nút kẹt hoặc bé quên thả: 30 giây là tự chốt
+const NOI_LAI_TOI_DA = 20;  // số lần nối lại phiên khi trình duyệt tự ngắt giữa chừng
 
-let nhanDang = null, dangNghe = false;
-let hetGio = null, choChot = null, coKetQua = false, hutLienTiep = 0, dungCoY = false;
+let nhanDang = null;
+let dangNghe = false;       // bộ nhận dạng đang chạy
+let dangGiu  = false;       // ngón tay bé đang đè nút
+let cauChot  = "";          // những mẩu đã nghe chắc chắn, gom lại chờ thả nút
+let choGui   = false;       // đã thả nút, đang đợi mẩu chốt cuối cùng
+let hetGioGiu = null, dungCoY = false, soNoiLai = 0;
 
-function xoaHenGio(){ clearTimeout(hetGio); clearTimeout(choChot); hetGio = choChot = null; }
-
-/* Hết giờ: gọi stop() trước (bộ nhận dạng còn cơ hội trả về câu nó đã nghe được),
-   nếu vẫn im thì abort() cho dứt điểm. */
-function henGioNghe(n){
-  xoaHenGio();
-  hetGio = setTimeout(()=>{
-    try{ n.stop(); }catch(e){}
-    choChot = setTimeout(()=>{ try{ n.abort(); }catch(e){} }, CHO_CHOT);
-  }, GIOI_HAN_NGHE);
-}
-
-function tamNghiVoiTiengOn(){
-  hutLienTiep = 0;
-  xoaHenGio();
-  datTrangThai("ngu");
-  micChu.textContent = "Chỗ này ồn quá…";
-  hienLoi("Ở đây ồn quá, tớ nghe không rõ. Cậu chạm vào nút hồng rồi nói với tớ nhé!", true);
-}
+function xoaHenGiu(){ clearTimeout(hetGioGiu); hetGioGiu = null; }
 
 function taoNhanDang(){
   if(!SR) return null;
   const n = new SR();
-  n.lang="vi-VN"; n.continuous=false; n.interimResults=false; n.maxAlternatives=1;
-  n.onstart = ()=>{ dangNghe=true; coKetQua=false; dungCoY=false; datTrangThai("nghe"); henGioNghe(n); };
+  /* continuous: giữ phiên chạy suốt lúc bé đè nút, không tự chốt khi bé ngập ngừng.
+     interimResults: có chữ hiện lên ngay để bé thấy Skye đang nghe được. */
+  n.lang="vi-VN"; n.continuous=true; n.interimResults=true; n.maxAlternatives=1;
+
+  /* bé nhả nút nhanh hơn cả lúc micro kịp mở: phiên vừa mở ra là đóng lại ngay,
+     nếu không nó sẽ chạy tiếp không ai tắt và chốt một câu chẳng ai chờ */
+  n.onstart = ()=>{
+    dangNghe = true;
+    if(!dangGiu){ try{ n.stop(); }catch(e){} return; }
+    datTrangThai("nghe");
+  };
+
   n.onresult = e=>{
-    const cau = (e.results[0][0].transcript||"").trim();
-    if(!cau) return;
-    coKetQua = true; hutLienTiep = 0; xoaHenGio();
-    hienLoi(thoat(cau), true); ting(); hoiMimi(cau);
-  };
-  n.onerror = e=>{
-    dangNghe = false; xoaHenGio();
-    if(e.error==="not-allowed" || e.error==="service-not-allowed"){
-      choPhepNghe = false; datTrangThai("ngu");
-      hienLoi("Skye cần bố mẹ cho phép dùng micro trong cài đặt trình duyệt nhé.", true); return;
+    let tam = "";
+    for(let i = e.resultIndex; i < e.results.length; i++){
+      const r = e.results[i];
+      if(r.isFinal) cauChot += r[0].transcript;
+      else          tam     += r[0].transcript;
     }
-    /* không tự bật lại ở đây — onend luôn nổ ngay sau onerror và lo việc đó,
-       đặt lịch ở cả hai chỗ sẽ thành hai vòng bật lại chồng lên nhau */
+    const hien = (cauChot + tam).trim();
+    if(hien) hienLoi(thoat(hien), true);
   };
+
+  n.onerror = e=>{
+    dangNghe = false;
+    if(e.error==="not-allowed" || e.error==="service-not-allowed"){
+      dangGiu = false; xoaHenGiu(); choPhepNghe = false; datTrangThai("ngu");
+      hienLoi("Skye cần bố mẹ cho phép dùng micro trong cài đặt trình duyệt nhé.", true);
+      return;
+    }
+    /* các lỗi khác (no-speech, network…) để onend lo — onend luôn nổ ngay sau onerror,
+       xử lý ở cả hai chỗ sẽ thành hai luồng chồng nhau */
+  };
+
   n.onend = ()=>{
-    dangNghe = false; xoaHenGio();
-    /* chỉ tính là "nghe hụt" khi phiên tự tắt vì không nghe ra gì — bị tắt có chủ ý
-       (bé chạm nút, hết giờ chơi, chuyển tab) thì không được tính */
-    if(dungCoY){ dungCoY = false; return; }
-    if(!coKetQua && ++hutLienTiep >= NGHI_KHI_ON){ tamNghiVoiTiengOn(); return; }
-    if(choPhepNghe && trangThai==="nghe") setTimeout(batNghe, 260);
+    dangNghe = false;
+    if(dungCoY){ dungCoY = false; return; }          // bị tắt có chủ ý, nơi gọi tự lo trạng thái
+    /* Safari hay tự kết thúc phiên dù bé còn đang giữ — nối lại cho bé nói tiếp */
+    if(dangGiu && ++soNoiLai <= NOI_LAI_TOI_DA){ try{ n.start(); }catch(e){} return; }
+    dangGiu = false;
+    guiCauDaNghe();
   };
   return n;
 }
-function batNghe(){
-  if(!choPhepNghe || dangNghe) return;
-  if(trangThai==="noi" || trangThai==="nghi") return;
+
+/* bé đè nút xuống */
+function batGiu(){
+  if(!dangChay || dangGiu) return;
+  if(!choPhepNghe){ datTrangThai("ngu"); return; }
+  dungNhac(); imNgay();                    // đè nút là cắt lời Skye, tới lượt bé nói
   if(!nhanDang) nhanDang = taoNhanDang();
-  if(!nhanDang){ hienLoi("Trình duyệt này chưa nghe được giọng nói. Bố mẹ mở bằng Safari hoặc Chrome giúp Skye nhé.", true); return; }
-  try{ nhanDang.start(); }catch(e){}
+  if(!nhanDang){
+    hienLoi("Trình duyệt này chưa nghe được giọng nói. Bố mẹ mở bằng Safari hoặc Chrome giúp Skye nhé.", true);
+    return;
+  }
+  dangGiu = true; choGui = false; cauChot = ""; soNoiLai = 0;
+  xoaHenGiu();
+  datTrangThai("nghe");
+  hienLoi("Tớ nghe đây, cậu nói đi…", true);
+  try{ nhanDang.start(); }catch(e){}       // đang chạy dở thì cứ dùng tiếp phiên đó
+  hetGioGiu = setTimeout(nhaGiu, GIU_TOI_DA);
 }
-/* abort() vô điều kiện: giữa lúc start() và onstart thì dangNghe vẫn còn false trong khi
-   bộ nhận dạng đã chạy — xét theo cờ đó sẽ bỏ sót và để lại một phiên nghe treo. */
+
+/* bé thả nút ra — chỉ ra hiệu dừng, việc gửi để onend làm, để mọi ngả chỉ gửi đúng một lần */
+function nhaGiu(){
+  if(!dangGiu) return;
+  dangGiu = false; choGui = true; xoaHenGiu();
+  if(!nhanDang){ guiCauDaNghe(); return; }
+  datTrangThai("nghi");
+  if(dangNghe){ try{ nhanDang.stop(); }catch(e){} }
+  /* chưa kịp onstart thì onstart sẽ tự stop; lỡ chẳng có sự kiện nào về thì lưới an toàn này gửi */
+  hetGioGiu = setTimeout(()=>{ try{ nhanDang.abort(); }catch(e){} guiCauDaNghe(); }, 3000);
+}
+
+function guiCauDaNghe(){
+  if(!choGui) return;                       // gác cửa: chỉ gửi một lần cho mỗi lần giữ nút
+  choGui = false; xoaHenGiu();
+  const cau = cauChot.trim(); cauChot = "";
+  if(cau){ ting(); hienLoi(thoat(cau), true); hoiMimi(cau); return; }
+  hienLoi("Tớ chưa nghe thấy gì. Cậu giữ nút rồi nói to hơn một chút nhé!", true);
+  datTrangThai("ngu");
+}
+
+/* Tắt ngay, không gửi gì (hết giờ chơi, mở góc bố mẹ, chuyển tab).
+   abort() vô điều kiện: giữa start() và onstart thì dangNghe vẫn false trong khi bộ nhận
+   dạng đã chạy — xét theo cờ đó sẽ bỏ sót và để lại một phiên nghe treo. */
 function tatNghe(){
-  xoaHenGio();
+  xoaHenGiu(); dangGiu = false; choGui = false; cauChot = "";
   if(nhanDang){ dungCoY = true; try{ nhanDang.abort(); }catch(e){} }
   dangNghe = false;
 }
+
+/* Skye nói/hát/kể xong: về thế chờ, KHÔNG tự mở micro — bé giữ nút mới nghe */
 function ketThucLuot(){
   khepMieng();
-  if(!choPhepNghe){ datTrangThai("ngu"); return; }
-  hutLienTiep = 0;
-  datTrangThai("nghe"); setTimeout(batNghe,320);
+  datTrangThai("ngu");
 }
